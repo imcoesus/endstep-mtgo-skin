@@ -6,6 +6,8 @@ Extensión de Chrome que hace que las partidas de endstep.cc se vean y se distri
 
 Made by [@imcoesus](https://x.com/imcoesus).
 
+![Endstep game with the MTGO skin: player rail on the left, opponent and own battlefield, horizontal phase bar above the hand](assets/screenshot.webp)
+
 ---
 
 ## Qué hace

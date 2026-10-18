@@ -1,0 +1,5 @@
+# Keep the extension zip lean: repo-only files stay out of git archive
+assets/ export-ignore
+.github/ export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore

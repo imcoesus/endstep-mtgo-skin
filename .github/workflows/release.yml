@@ -1,0 +1,42 @@
+name: Release
+
+# Builds the extension zip for a tag and publishes it as a GitHub release.
+# Runs on new v* tags, or by hand for an existing tag (Actions → Release →
+# Run workflow). Notes come from .github/release-notes/<tag>.md if present.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to release (e.g. v1.0.1)
+        required: true
+      latest:
+        description: Mark as latest release
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      LATEST: ${{ github.event_name == 'push' || inputs.latest }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build zip
+        run: git archive --format=zip --prefix=endstep-mtgo-skin/ -o "endstep-mtgo-skin-$TAG.zip" "$TAG"
+
+      - name: Publish release
+        run: |
+          notes=".github/release-notes/$TAG.md"
+          [ -f "$notes" ] || { echo "Release $TAG" > /tmp/notes.md; notes=/tmp/notes.md; }
+          gh release create "$TAG" "endstep-mtgo-skin-$TAG.zip" \
+            --verify-tag --title "$TAG" --notes-file "$notes" --latest="$LATEST"

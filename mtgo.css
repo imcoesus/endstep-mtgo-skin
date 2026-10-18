@@ -756,3 +756,45 @@ html.mtgo-skin .gl-turn--opp .gl-turn-owner { color: var(--mtgo-title); }
   html.mtgo-skin [data-half="self"] { padding-right: var(--mtgo-me-zone-space, 0px) !important; }
   html.mtgo-skin [data-half="opp"] { padding-left: var(--mtgo-opp-zone-space, 0px) !important; }
 }
+
+/* ---------- 13. Tall decisions (divide damage, multi-choice…) ------------
+   The left rail spans every grid row, so when a decision panel grows tall
+   the browser hands the extra height to the auto-sized hand row and both
+   battlefields collapse to slivers. Size-containing the rail removes its
+   content from the row math; it then scrolls inside its own column. */
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-rail-left {
+    contain: size;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+  }
+  /* Same guard for the hand: never taller than a card row plus padding */
+  html.mtgo-skin .wr-main-col > .zone-hand { max-height: 220px; }
+}
+
+/* ---------- 14. Extra center-column elements ----------------------------
+   The center column is display:contents (section 9), so anything Endstep
+   adds to it at runtime — e.g. the combat damage assignment tray — would be
+   auto-placed into a new implicit grid row, eating the height and crushing
+   both battlefields. Give such elements a named "tray" row above the phase
+   strip instead, capped so the board always keeps most of the screen. */
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-game-grid {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "left opp"
+      "left me"
+      "left tray"
+      "left phase"
+      "left hand";
+  }
+  html.mtgo-skin .wr-main-col > :not(.wr-resizable-panel):not(.zone-hand):not(.h-px):not([data-hand-resize-handle]) {
+    grid-area: tray;
+    min-width: 0;
+    max-height: 35vh;
+    overflow: auto;
+  }
+}

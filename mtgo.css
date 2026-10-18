@@ -300,17 +300,23 @@ html.mtgo-skin .wr-pb-section-label {
 html.mtgo-skin .wr-pb-section-rule { background: #333; }
 
 /* ---------- 8. Notices --------------------------------------------------- */
+/* Toasts like "Forge AI: Kept 7" and their expanded details ("3 from coe's
+   library to their graveyard" + cards): dark bevelled panels, like MTGO's
+   in-game popups, so they don't flash white over the felt. */
 html.mtgo-skin [data-testid="notice-chip"] {
-  background: #ececec !important;
+  background: linear-gradient(#2e2e2e, #222) !important;
   border: 1px solid #000 !important;
-  border-radius: 3px !important;
-  box-shadow: 0 2px 6px #000 !important;
-  --color-text-display: #111;
-  --color-text-primary: #111;
-  --color-text-secondary: #333;
-  color: #111;
+  border-radius: 4px !important;
+  box-shadow: inset 0 1px 0 #444, 0 3px 8px #000c !important;
+  --color-text-display: #fff;
+  --color-text-primary: #e6e6e6;
+  --color-text-secondary: #a9a9a9;
+  color: #e6e6e6;
 }
-html.mtgo-skin [data-testid="notice-chip-headline"] { font-family: var(--mtgo-ui); color: #111 !important; }
+html.mtgo-skin [data-testid="notice-chip"] * { font-family: var(--mtgo-ui); }
+html.mtgo-skin [data-testid="notice-chip-headline"] { color: #fff !important; font-weight: 600; }
+html.mtgo-skin [data-testid="notice-chip"] img[data-testid="card-img"] { box-shadow: 0 0 0 1px #000; }
+html.mtgo-skin [data-testid="notice-chip-timer"] { background: #3f7fe0 !important; }
 
 /* ==========================================================================
    9. MTGO layout (desktop/tablet only — below 768px Endstep stacks

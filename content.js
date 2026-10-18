@@ -66,7 +66,11 @@ function autoOpenLog() {
 // the floating window.
 // ---------------------------------------------------------------------------
 const ZONE_CLASS = 'mtgo-zone-dock';
-const ZONE_TITLE = /graveyard|exile|reveal|library|sideboard|command/i;
+// Zone windows are titled "coe's Graveyard", "Garo's Exile"… — possessive and
+// capitalized. Case-sensitive on purpose: notices say "coe's library to their
+// graveyard" in lowercase and must not be docked.
+const ZONE_TITLE = /['’]s (Graveyard|Exile|Library|Sideboard|Command Zone)(?![a-z])/;
+const NOTICE = '[data-testid="chip-column"], [data-testid^="notice"]';
 const ZONE_W = 190;  // keep in sync with --mtgo-zone-w in mtgo.css
 const ZONE_GAP = 6;
 
@@ -97,6 +101,8 @@ function findZoneWindows() {
   for (const el of document.querySelectorAll('.fixed, [style*="position: fixed"], .' + ZONE_CLASS)) {
     if (seen.has(el) || el.classList.contains(DOCK_CLASS)) continue;
     seen.add(el);
+    // Toasts and their expanded details are never zone windows
+    if (el.closest(NOTICE) || el.querySelector(NOTICE)) continue;
     if (el.closest('[role="dialog"][aria-modal="true"]') || el.querySelector('.gl-title')) continue;
     // The modal version of the viewer (it's the one with the Pop out button)
     if ([...el.querySelectorAll('button')].some((b) => /pop out/i.test(b.textContent))) continue;

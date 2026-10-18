@@ -1,0 +1,752 @@
+/* ==========================================================================
+   Endstep → MTGO skin
+   Everything is scoped under html.mtgo-skin (toggled by content.js).
+   Endstep is Tailwind v4: most colors come from --color-* tokens on :root,
+   so the bulk of the reskin is a token swap; the rest targets wr-* classes.
+   ========================================================================== */
+
+/* ---------- 1. Tokens ---------------------------------------------------- */
+html.mtgo-skin {
+  --mtgo-chrome: #1c1c1c;          /* window / rail background */
+  --mtgo-panel: #262626;           /* raised panels */
+  --mtgo-panel-hi: #333;           /* bevel highlight */
+  --mtgo-edge: #0b0b0b;            /* bevel shadow */
+  --mtgo-slate: #7f8b98;           /* battlefield felt */
+  --mtgo-slate-dark: #66717d;      /* opponent half */
+  --mtgo-frame: #c3ccd5;           /* zone frame stroke */
+  --mtgo-blue: #2f6fd6;            /* counters / badges */
+  --mtgo-title: #6ea8ff;           /* panel titles */
+  --mtgo-gold: #e3a43c;            /* active phase ring */
+  --mtgo-ui: "Segoe UI", Tahoma, Verdana, Geneva, sans-serif;
+  --mtgo-serif: Georgia, "Times New Roman", serif;
+
+  --color-void: #141414;
+  --color-surface: var(--mtgo-chrome);
+  --color-elevated: var(--mtgo-panel);
+  --color-hover: #3a3a3a;
+  --color-border-subtle: #000;
+  --color-border-default: #3c3c3c;
+  --color-border-strong: #5a5a5a;
+  --color-text-display: #fff;
+  --color-text-primary: #e6e6e6;
+  --color-text-secondary: #a9a9a9;
+  --color-text-tertiary: #8a8a8a;
+  --color-text-inverse: #111;
+  --color-accent: #3f7fe0;
+  --color-accent-hover: #5a95ee;
+  --color-accent-muted: #1f3350;
+  --color-accent-chrome: var(--mtgo-gold);
+  --color-accent-glint: #ffd27a;
+  --color-ink-tome: #1a1a1a;
+  --color-zone-battlefield: var(--mtgo-slate);
+  --color-zone-hand: #1f1f1f;
+  --color-half-self: var(--mtgo-slate);
+  --color-half-opponent: var(--mtgo-slate-dark);
+  --color-half-self-edge: transparent;
+  --color-half-opponent-edge: transparent;
+  --font-sans: var(--mtgo-ui);
+  --font-serif: var(--mtgo-ui);
+  --font-display: var(--mtgo-serif);
+  --gradient-hairline-gold: linear-gradient(90deg, transparent, #555, transparent);
+}
+
+html.mtgo-skin body,
+html.mtgo-skin .bg-void {
+  background: #141414;
+  font-family: var(--mtgo-ui);
+}
+
+/* ---------- 2. Rails (left = player plates, right = phases) -------------- */
+html.mtgo-skin .wr-rail-left,
+html.mtgo-skin .wr-rail-right {
+  background: var(--mtgo-chrome);
+  border-color: #000;
+  box-shadow: inset 1px 0 0 #2e2e2e, inset -1px 0 0 #2e2e2e;
+}
+
+/* Player plates: MTGO-style framed cards with a bevel */
+html.mtgo-skin .wr-plate {
+  margin: 6px;
+  border-radius: 4px;
+  background: linear-gradient(#2c2c2c, #1f1f1f) !important;
+  border: 1px solid #000;
+  box-shadow: inset 0 1px 0 #444, inset 0 -1px 0 #111, 0 1px 3px #000;
+}
+html.mtgo-skin .wr-plate[data-deciding="true"] {
+  border-color: var(--mtgo-gold);
+  box-shadow: inset 0 1px 0 #444, 0 0 0 1px #6b4a12, 0 0 8px #e3a43c55;
+}
+
+html.mtgo-skin .wr-player-nameplate {
+  font-family: var(--mtgo-ui);
+  font-style: normal;
+  font-weight: 700;
+  color: #fff;
+}
+html.mtgo-skin .font-serif.italic { font-style: normal; }
+
+/* Big white life total with a black outline, like MTGO avatars */
+html.mtgo-skin .life-total {
+  font-family: var(--mtgo-serif);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 2.6rem !important;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 3px #000;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 4px #000;
+}
+html.mtgo-skin .label-up {
+  font-family: var(--mtgo-ui);
+  letter-spacing: .02em;
+  text-transform: none;
+  color: #9a9a9a;
+}
+
+/* Graveyard / exile / library counters → blue MTGO badges */
+html.mtgo-skin [data-zone-anchor$="graveyard"],
+html.mtgo-skin [data-zone-anchor$="exile"] {
+  background: linear-gradient(#3b7be6, #2457b0);
+  border: 1px solid #0d2a5c;
+  border-radius: 4px;
+  color: #fff;
+  box-shadow: inset 0 1px 0 #7fb0ff;
+  opacity: 1 !important;
+}
+html.mtgo-skin [data-zone-anchor$="graveyard"]:disabled,
+html.mtgo-skin [data-zone-anchor$="exile"]:disabled { filter: saturate(.55) brightness(.8); }
+
+/* ---------- 3. Generic buttons (pass shortcuts, chips) ------------------- */
+html.mtgo-skin [aria-label="Pass priority shortcuts"] button,
+html.mtgo-skin [data-testid="hold-priority-chip"],
+html.mtgo-skin [data-testid="tablet-log-dock"] button {
+  font-family: var(--mtgo-ui);
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 12px;
+  color: #ddd;
+  background: linear-gradient(#3a3a3a, #262626);
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 #555;
+}
+html.mtgo-skin [aria-label="Pass priority shortcuts"] button:hover,
+html.mtgo-skin [data-testid="hold-priority-chip"]:hover {
+  background: linear-gradient(#4a4a4a, #303030);
+  color: #fff;
+}
+html.mtgo-skin [data-kcap] {
+  background: #111;
+  border-color: #000;
+  color: #9ec3ff;
+  border-radius: 2px;
+}
+
+/* ---------- 4. Decision surface → MTGO prompt box ------------------------ */
+html.mtgo-skin .wr-ds-banner { display: none; }
+html.mtgo-skin .wr-ds-active .wr-ds-body {
+  --color-text-display: #111;
+  --color-text-primary: #111;
+  --color-text-secondary: #333;
+  --color-surface: #ececec;
+  --color-ink-tome: #d8d8d8;
+  background: #ececec !important;
+  color: #111;
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 4px #000;
+  padding-top: 10px;
+}
+html.mtgo-skin .wr-ds-active .wr-ds-title {
+  font-family: var(--mtgo-ui);
+  font-style: normal;
+  font-weight: 700;
+  color: #111;
+}
+html.mtgo-skin .wr-ds-active .wr-ds-message { font-family: var(--mtgo-ui); color: #222; }
+html.mtgo-skin .wr-ds-actions button {
+  font-family: var(--mtgo-ui);
+  font-weight: 700;
+  color: #111 !important;
+  background: linear-gradient(#fdfdfd, #c9c9c9) !important;
+  border: 1px solid #555 !important;
+  border-radius: 3px !important;
+  box-shadow: inset 0 1px 0 #fff;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+html.mtgo-skin .wr-ds-actions button:hover { background: linear-gradient(#fff, #dcdcdc) !important; }
+html.mtgo-skin .wr-ds-actions button [data-kcap] { color: #333; background: #e4e4e4; border-color: #999; }
+
+/* ---------- 5. Battlefield → slate felt with framed halves --------------- */
+html.mtgo-skin [data-half] {
+  background:
+    radial-gradient(ellipse at center, #ffffff14, transparent 70%),
+    var(--mtgo-slate);
+  margin: 4px 6px;
+  border: 1px solid var(--mtgo-frame);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px #00000055, inset 0 0 24px #00000040;
+}
+html.mtgo-skin [data-half="opp"] {
+  background:
+    radial-gradient(ellipse at center, #ffffff10, transparent 70%),
+    var(--mtgo-slate-dark);
+}
+html.mtgo-skin .zone-battlefield { background: transparent; }
+html.mtgo-skin .zone-battlefield > span.italic {
+  font-family: var(--mtgo-ui);
+  font-style: normal;
+  color: #ffffff66 !important;
+}
+
+/* Cards get MTGO's thin black border + soft shadow */
+html.mtgo-skin img[data-testid="card-img"] {
+  border-radius: 5px;
+  box-shadow: 0 0 0 1px #000, 0 2px 4px #000a;
+}
+html.mtgo-skin [data-testid="card-name-overlay"] { display: none !important; }
+
+/* ---------- 6. Hand strip ------------------------------------------------ */
+html.mtgo-skin .zone-hand {
+  background: linear-gradient(#232323, #181818);
+  border-top: 1px solid #000;
+  box-shadow: inset 0 1px 0 #3a3a3a;
+}
+html.mtgo-skin [data-hand-resize-handle] { background: #2a2a2a; }
+
+/* ---------- 7. Phase tracker -------------------------------------------- */
+html.mtgo-skin .wr-phase-bar {
+  background: #1f1f1f;
+  border-color: #000;
+}
+html.mtgo-skin .wr-turn-chip {
+  background: linear-gradient(#3a3a3a, #262626);
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 #555;
+}
+html.mtgo-skin .wr-turn-owner,
+html.mtgo-skin .wr-turn-num {
+  font-family: var(--mtgo-ui);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0;
+}
+
+/* Each phase row: dark label, the step in progress gets the gold MTGO ring */
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb {
+  background: #262626;
+  border: 1px solid #000;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 #383838;
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-label {
+  font-family: var(--mtgo-ui);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 12px;
+  color: #8f8f8f;
+  text-shadow: 0 1px 0 #000;
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb:has(.is-set) .wr-pb-label { color: #cfcfcf; }
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb--current,
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb[aria-current],
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb[data-current="true"] {
+  border-color: var(--mtgo-gold);
+  box-shadow: 0 0 0 1px #6b4a12, 0 0 6px #e3a43c88, inset 0 1px 0 #555;
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb--current .wr-pb-label,
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb[aria-current] .wr-pb-label { color: #fff; }
+
+/* Stop "blades": MTGO marks stops with small triangles under the step
+   name instead of filling the row. Clear the fills and draw a marker. */
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade .wr-pb-blade-face,
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade.is-set .wr-pb-blade-face {
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+html.mtgo-skin .wr-phase-bar--vertical button.wr-pb-blade:not(.is-set):hover .wr-pb-blade-face {
+  background: #ffffff0d !important;
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade.is-set .wr-pb-blade-face::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 5px solid #f2f2f2;
+  filter: drop-shadow(0 0 1px #000);
+}
+html.mtgo-skin .wr-pb-blade--mine.is-set .wr-pb-blade-face::after { left: 10px; }
+html.mtgo-skin .wr-pb-blade--opp.is-set .wr-pb-blade-face::after { right: 10px; border-bottom-color: #8fb6ff; }
+html.mtgo-skin .wr-phase-legend { display: none; }
+html.mtgo-skin .wr-pb-section-label {
+  font-family: var(--mtgo-ui);
+  letter-spacing: 0;
+  text-transform: none;
+  color: #777;
+}
+html.mtgo-skin .wr-pb-section-rule { background: #333; }
+
+/* ---------- 8. Notices --------------------------------------------------- */
+html.mtgo-skin [data-testid="notice-chip"] {
+  background: #ececec !important;
+  border: 1px solid #000 !important;
+  border-radius: 3px !important;
+  box-shadow: 0 2px 6px #000 !important;
+  --color-text-display: #111;
+  --color-text-primary: #111;
+  --color-text-secondary: #333;
+  color: #111;
+}
+html.mtgo-skin [data-testid="notice-chip-headline"] { font-family: var(--mtgo-ui); color: #111 !important; }
+
+/* ==========================================================================
+   9. MTGO layout (desktop/tablet only — below 768px Endstep stacks
+      everything in one column and we leave that alone).
+
+      ┌────────┬──────────────────────────────┐
+      │ opp    │  opponent battlefield         │
+      │ plate  │                               │
+      ├────────┼──────────────────────────────┤
+      │ prompt │  my battlefield               │
+      │ +pass  │                               │
+      ├────────┼──────────────────────────────┤
+      │ my     │  Turn · Untap Upkeep … Clean  │  ← phase bar, horizontal
+      │ plate  ├──────────────────────────────┤
+      │        │  hand                         │
+      └────────┴──────────────────────────────┘
+
+   Pure CSS: the center column becomes display:contents so its children
+   join the outer grid, and the right rail is placed in the "phase" row.
+   React keeps owning every node, so nothing breaks on re-render.
+   ========================================================================== */
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-game-grid {
+    grid-template-columns: 172px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "left opp"
+      "left me"
+      "left phase"
+      "left hand";
+    background: #141414;
+  }
+
+  /* Left rail spans the full height */
+  html.mtgo-skin .wr-rail-left {
+    grid-area: left;
+    min-height: 0;
+    border-right: 1px solid #000;
+  }
+  /* The rail-width drag handles make no sense in a fixed MTGO layout */
+  html.mtgo-skin .wr-rail-left > .cursor-col-resize,
+  html.mtgo-skin .wr-rail-right > .cursor-col-resize,
+  html.mtgo-skin .wr-main-col > .h-px,
+  html.mtgo-skin .wr-main-col > [data-hand-resize-handle] { display: none; }
+
+  /* Dissolve the center column into the outer grid */
+  html.mtgo-skin .wr-main-col { display: contents; }
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel {
+    height: auto !important;
+    min-height: 0;
+    flex: none;
+  }
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel:nth-child(1) { grid-area: opp; }
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel:nth-of-type(2),
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel.flex-1 { grid-area: me; }
+  html.mtgo-skin .wr-main-col > .zone-hand {
+    grid-area: hand;
+    height: auto;
+    overflow: hidden;
+    border-top: 1px solid #000;
+  }
+  html.mtgo-skin [data-half] { height: calc(100% - 8px); }
+
+  /* ---- Right rail → horizontal phase strip ---------------------------- */
+  html.mtgo-skin .wr-rail-right {
+    grid-area: phase;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 6px;
+    border: 0;
+    border-top: 1px solid #000;
+    background: linear-gradient(#2a2a2a, #1c1c1c);
+    box-shadow: inset 0 1px 0 #3c3c3c;
+    overflow: hidden;
+  }
+  html.mtgo-skin .wr-rail-right > .flex.justify-end { order: 9; padding: 0; }
+  /* container-type:inline-size gives it zero intrinsic width — size it */
+  html.mtgo-skin .wr-rail-right > .\@container { order: 8; margin: 0; flex: none; width: 128px; }
+
+  html.mtgo-skin .wr-phase-bar--vertical {
+    flex: 1;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+  }
+  html.mtgo-skin .wr-phase-bar--vertical::after { display: none; }
+
+  /* "Turn 12: WotC_K"-style label at the start of the strip */
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-chip {
+    flex-direction: row;
+    align-self: center;
+    gap: .35rem;
+    padding: 2px 8px;
+    animation: none;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-sep { display: inline; color: #777; }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-owner,
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-num { font-size: 12px; color: #fff; }
+
+  html.mtgo-skin .wr-phase-bar--vertical .wr-priority-badge {
+    order: 2;
+    align-self: center;
+    font-family: var(--mtgo-ui);
+  }
+
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb-rail {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    padding: 0;
+    min-width: 0;
+  }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb-section { display: none; }
+
+  /* Steps: plain text like MTGO; the current step gets the gold pill */
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 24px;
+    height: 24px;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    border-radius: 12px;
+  }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb-label {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb--current {
+    background: linear-gradient(#3a3a3a, #232323);
+    border-color: var(--mtgo-gold);
+  }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb--past .wr-pb-label { color: #6a6a6a; }
+
+  /* Stop markers sit centered under the step name, like MTGO's triangles */
+  html.mtgo-skin .wr-pb-blade--mine.is-set .wr-pb-blade-face::after { left: auto; right: 2px; bottom: -1px; }
+  html.mtgo-skin .wr-pb-blade--opp.is-set .wr-pb-blade-face::after { right: auto; left: 2px; bottom: -1px; }
+
+  /* Hold priority as a compact button at the end of the strip */
+  html.mtgo-skin [data-testid="hold-priority-chip"] {
+    flex-direction: row;
+    margin: 0;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  /* Log opener → a full-width button at the foot of the left rail,
+     where MTGO keeps its settings/chat buttons */
+  html.mtgo-skin .wr-rail-left { padding-bottom: 40px; }
+  html.mtgo-skin button[data-log-opener] {
+    top: auto;
+    bottom: 6px;
+    left: 6px;
+    width: 160px;
+    height: 28px;
+    padding: 0;
+    flex-direction: row;
+    justify-content: center;
+    transform: none;
+    translate: none;
+    background: linear-gradient(#3a3a3a, #262626);
+    border: 1px solid #000;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 #555;
+  }
+  html.mtgo-skin button[data-log-opener] > span {
+    writing-mode: horizontal-tb !important;
+    font-family: var(--mtgo-ui) !important;
+    font-style: normal !important;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: #ddd;
+  }
+}
+
+/* Tighter left rail so prompt + pass shortcuts fit between both plates */
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-rail-left .wr-plate { margin: 4px; padding: 8px 10px; }
+  html.mtgo-skin [aria-label="Pass priority shortcuts"] button { padding-top: 4px; padding-bottom: 4px; }
+  html.mtgo-skin [data-testid="hold-priority-chip"] > span { flex-wrap: nowrap; }
+}
+
+/* Tablet widths: Endstep shows a floating "Log" pill instead of the side
+   tab — dock it in the same spot at the foot of the left rail. */
+@media (min-width: 768px) {
+  html.mtgo-skin [data-testid="tablet-log-dock"] {
+    left: 6px !important;
+    bottom: 6px !important;
+    transform: none !important;
+    translate: none !important; /* Tailwind v4 uses `translate`, not transform */
+    width: 160px;
+  }
+  html.mtgo-skin [data-testid="tablet-log-dock"] button {
+    width: 100%;
+    min-height: 28px;
+    height: 28px;
+    border-radius: 3px;
+  }
+}
+
+/* Narrow strip: shrink step names and drop the priority pill so the
+   phase strip never overlaps itself. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb-label { font-size: 10px; }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-priority-badge { display: none; }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-chip { padding: 2px 4px; }
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-owner,
+  html.mtgo-skin .wr-phase-bar--vertical .wr-turn-num { font-size: 11px; }
+  html.mtgo-skin .wr-rail-right > .\@container { width: 104px; }
+}
+
+/* ---------- 10. Live-game states (seen on endstep.cc) -------------------- */
+
+/* Turn glow: Endstep washes the active half in gold (mine) or blue (opp).
+   MTGO keeps the felt flat, so kill both gradients and the inset glow. */
+html.mtgo-skin [data-half] {
+  --gradient-half-self: none;
+  --gradient-half-opponent: none;
+}
+html.mtgo-skin [data-turn][data-half="self"] { background-color: var(--mtgo-slate); }
+html.mtgo-skin [data-turn][data-half="opp"] { background-color: var(--mtgo-slate-dark); }
+
+/* Current step: Endstep swaps the label for a big italic "cartouche"
+   (name + help line + corner brackets). Flatten it to an MTGO pill. */
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb--current,
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb--current[data-turn="opp"] {
+  flex-grow: 1.3;
+  min-height: 24px;
+  border-color: var(--mtgo-gold);
+  box-shadow: 0 0 0 1px #6b4a12, 0 0 6px #e3a43c88, inset 0 1px 0 #555;
+  animation: none;
+}
+html.mtgo-skin .wr-pb-now {
+  padding: 0 4px;
+  gap: 0;
+  animation: none;
+}
+html.mtgo-skin .wr-pb-now-name,
+html.mtgo-skin .wr-pb--current[data-turn="opp"] .wr-pb-now-name {
+  font-family: var(--mtgo-ui);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 1px 0 #000;
+}
+html.mtgo-skin .wr-pb-now-help,
+html.mtgo-skin .wr-pb-corner { display: none; }
+
+/* Prompt buttons ("Pass priority", "OK"…): no uppercase tracking and no
+   scrolling marquee — plain MTGO button text that ellipsizes if needed. */
+html.mtgo-skin .wr-ds-actions button {
+  min-width: 0;
+  max-width: 100%;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 13px;
+}
+html.mtgo-skin .wr-ds-actions button * {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-family: var(--mtgo-ui) !important;
+}
+html.mtgo-skin .wr-ds-actions .overflow-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html.mtgo-skin .wr-ds-actions .overflow-label__text {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Phase strip overflow (live matches add "Game 3 / 3", "On the draw",
+   "Chat"…): everything stays on one line, fixed items keep their size and
+   only the step list shrinks. */
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-rail-right * { white-space: nowrap; }
+  html.mtgo-skin .wr-rail-right > * { flex-shrink: 0; }
+  html.mtgo-skin .wr-rail-right > .wr-phase-bar { flex-shrink: 1; min-width: 0; }
+  html.mtgo-skin .wr-phase-bar--vertical > * { flex-shrink: 0; }
+  html.mtgo-skin .wr-phase-bar--vertical > .wr-pb-rail { flex-shrink: 1; min-width: 0; overflow: hidden; }
+  /* Multi-line chips (game number over score) collapse to one row */
+  html.mtgo-skin .wr-rail-right > :not(.wr-phase-bar):not(.\@container) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    overflow: hidden;
+    font-family: var(--mtgo-ui);
+    font-size: 12px;
+  }
+}
+
+/* ---------- 11. Game log docked on the right (MTGO's chat/log column) ----
+   content.js tags Endstep's floating log window with .mtgo-log-dock and
+   sets html.mtgo-log-open while it exists. Dragging/resizing writes inline
+   left/top/width/height/transform — the !importants override those. */
+@media (min-width: 768px) {
+  html.mtgo-skin { --mtgo-log-w: 300px; }
+
+  html.mtgo-skin .mtgo-log-dock {
+    position: fixed !important;
+    inset: 0 0 0 auto !important;
+    width: var(--mtgo-log-w) !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    translate: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    border-left: 1px solid #000 !important;
+    box-shadow: inset 1px 0 0 #2e2e2e !important;
+    background: var(--mtgo-chrome) !important;
+    z-index: 45 !important;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Its scrolling body should fill the column */
+  html.mtgo-skin .mtgo-log-dock > :last-child { flex: 1; min-height: 0; max-height: none !important; }
+
+  /* Board shrinks to leave room for the column */
+  html.mtgo-skin.mtgo-log-open .wr-game-grid { width: calc(100% - var(--mtgo-log-w)); }
+  html.mtgo-skin.mtgo-log-open [data-testid="chip-column"] { right: calc(var(--mtgo-log-w) + 12px) !important; }
+
+  /* MTGO-ish header: flat gray bar, plain title, no drag grip affordance */
+  html.mtgo-skin .mtgo-log-dock .gl-title {
+    font-family: var(--mtgo-serif);
+    font-style: normal;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--mtgo-title);
+  }
+  html.mtgo-skin .mtgo-log-dock [class*="cursor-grab"],
+  html.mtgo-skin .mtgo-log-dock [class*="cursor-move"] { cursor: default !important; }
+}
+
+/* Log contents: plainer type, MTGO-style turn banners */
+html.mtgo-skin .gl-row { font-family: var(--mtgo-ui); font-size: 12px; }
+html.mtgo-skin .gl-phase {
+  font-family: var(--mtgo-ui);
+  letter-spacing: .04em;
+  color: #8a8a8a;
+}
+html.mtgo-skin .gl-turn {
+  background: linear-gradient(#333, #242424) !important;
+  border-top: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
+html.mtgo-skin .gl-turn-num {
+  font-family: var(--mtgo-serif);
+  font-style: normal;
+  font-weight: 700;
+  color: #fff;
+}
+html.mtgo-skin .gl-turn-owner { font-family: var(--mtgo-ui); letter-spacing: .04em; }
+html.mtgo-skin .gl-turn--you .gl-turn-owner { color: var(--mtgo-gold); }
+html.mtgo-skin .gl-turn--opp .gl-turn-owner { color: var(--mtgo-title); }
+
+/* ---------- 12. Zone windows docked inside the battlefield --------------
+   content.js tags popped-out zone windows (graveyard, exile, revealed…)
+   with .mtgo-zone-dock--me / --opp, gives each a --mtgo-zone-slot index,
+   and publishes each half's box as --mtgo-{me,opp}-{top,left,right,height}.
+   Mine dock to the right edge of my half, the opponent's to the left edge
+   of theirs, side by side like MTGO's graveyard windows. */
+@media (min-width: 768px) {
+  html.mtgo-skin { --mtgo-zone-w: 190px; --mtgo-zone-gap: 6px; }
+
+  html.mtgo-skin .mtgo-zone-dock {
+    position: fixed !important;
+    width: var(--mtgo-zone-w) !important;
+    height: calc(var(--mtgo-zone-h) - 2 * var(--mtgo-zone-gap)) !important;
+    max-height: none !important;
+    transform: none !important;
+    translate: none !important;
+    margin: 0 !important;
+    bottom: auto !important;
+    z-index: 30 !important;
+    display: flex;
+    flex-direction: column;
+    background: var(--mtgo-panel) !important;
+    border: 1px solid #000 !important;
+    border-radius: 4px !important;
+    box-shadow: inset 0 1px 0 #444, 0 2px 6px #000a !important;
+    overflow: hidden;
+  }
+  html.mtgo-skin .mtgo-zone-dock > :last-child {
+    flex: 1;
+    min-height: 0;
+    max-height: none !important;
+    overflow: auto;
+  }
+  html.mtgo-skin .mtgo-zone-dock--me {
+    --mtgo-zone-h: var(--mtgo-me-height);
+    top: calc(var(--mtgo-me-top) + var(--mtgo-zone-gap)) !important;
+    right: calc(var(--mtgo-me-right) + var(--mtgo-zone-gap)
+                + var(--mtgo-zone-slot, 0) * (var(--mtgo-zone-w) + var(--mtgo-zone-gap))) !important;
+    left: auto !important;
+  }
+  html.mtgo-skin .mtgo-zone-dock--opp {
+    --mtgo-zone-h: var(--mtgo-opp-height);
+    top: calc(var(--mtgo-opp-top) + var(--mtgo-zone-gap)) !important;
+    left: calc(var(--mtgo-opp-left) + var(--mtgo-zone-gap)
+               + var(--mtgo-zone-slot, 0) * (var(--mtgo-zone-w) + var(--mtgo-zone-gap))) !important;
+    right: auto !important;
+  }
+
+  /* MTGO-style title bar: blue serif title on a dark strip */
+  html.mtgo-skin .mtgo-zone-dock > :first-child {
+    background: linear-gradient(#333, #252525);
+    border-bottom: 1px solid #000;
+    font-family: var(--mtgo-serif);
+    font-weight: 700;
+    color: var(--mtgo-title);
+  }
+  html.mtgo-skin .mtgo-zone-dock img[data-testid="card-img"] { max-width: 100%; height: auto !important; }
+
+  /* Keep battlefield cards out from under the docked windows */
+  html.mtgo-skin [data-half="self"] { padding-right: var(--mtgo-me-zone-space, 0px) !important; }
+  html.mtgo-skin [data-half="opp"] { padding-left: var(--mtgo-opp-zone-space, 0px) !important; }
+}

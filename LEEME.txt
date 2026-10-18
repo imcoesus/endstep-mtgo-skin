@@ -1,0 +1,106 @@
+ENDSTEP MTGO SKIN
+=================
+Extensión de Chrome que hace que las partidas de endstep.cc se vean y se
+distribuyan como Magic: The Gathering Online (MTGO).
+
+Hecha por @imcoesus — https://x.com/imcoesus
+
+
+QUÉ HACE
+--------
+- Colores, letra y botones al estilo MTGO: gris carbón, campo de batalla
+  gris pizarra, vidas grandes en blanco.
+- Layout como MTGO:
+    · columna izquierda con los jugadores y el prompt,
+    · campo del rival arriba y el tuyo abajo,
+    · barra de fases horizontal encima de la mano.
+- El log de la partida queda fijo a la derecha, de arriba a abajo, y se
+  abre solo al empezar cada partida.
+- Cementerio, exilio y cartas reveladas se quedan abiertos y pegados al
+  campo de batalla: los tuyos a la derecha de tu campo, los del rival
+  arriba a la izquierda del suyo. Basta con pulsar la calavera o la llama
+  azul.
+
+Solo cambia en pantallas de 768 px de ancho o más. En móvil se mantiene el
+diseño normal de Endstep (con los colores de MTGO).
+
+
+CÓMO INSTALARLA
+---------------
+1. Descomprime el .zip. Te quedará una carpeta "endstep-mtgo-skin".
+   Guárdala en un sitio donde no la vayas a borrar: Chrome la usa desde
+   ahí.
+2. Abre Chrome y escribe en la barra de direcciones:  chrome://extensions
+3. Activa "Modo de desarrollador" (interruptor arriba a la derecha).
+4. Pulsa "Cargar descomprimida" y elige la carpeta "endstep-mtgo-skin"
+   (la que contiene el archivo manifest.json).
+5. Abre o recarga una partida en https://endstep.cc
+
+Funciona igual en otros navegadores basados en Chrome (Brave, Edge, Arc,
+Opera…). Busca su página de extensiones y el mismo botón de "Cargar
+descomprimida".
+
+
+CÓMO USARLA
+-----------
+- Se activa sola en endstep.cc. No hay que configurar nada.
+- Para apagarla o encenderla: pulsa el icono de la extensión (el círculo
+  azul con aro dorado; si no lo ves, está dentro del icono del puzle 🧩) y
+  marca o desmarca "Enabled". El cambio es instantáneo.
+- Log: si lo cierras con la ✕ se queda cerrado. Para volver a abrirlo,
+  usa el botón "Log" de abajo a la izquierda.
+- Zonas: pulsa la calavera (cementerio) o la llama (exilio) de cualquier
+  jugador y la ventana aparece pegada a su campo. Ciérrala con su ✕.
+
+
+ACTUALIZAR A UNA VERSIÓN NUEVA
+------------------------------
+Sustituye los archivos de la carpeta por los nuevos y pulsa el botón de
+recargar (↻) de la extensión en chrome://extensions. Después recarga la
+partida.
+
+
+PRIVACIDAD Y SEGURIDAD
+----------------------
+Esta extensión NO recoge, guarda ni envía ningún dato. Es 100% segura:
+
+- Solo funciona en endstep.cc. No puede ver ninguna otra web.
+- No hace ninguna conexión a internet: no hay analíticas, ni rastreo, ni
+  servidores propios.
+- No lee tus contraseñas, tu cuenta ni tus mazos.
+- El único permiso que pide es "storage", y solo lo usa para recordar si
+  la tienes encendida o apagada.
+- Lo único que hace es cambiar el aspecto de la página (CSS) y pulsar por
+  ti dos botones de la propia Endstep: "Pop out" de las zonas y abrir el
+  log al empezar.
+- El código es corto y legible: puedes abrir content.js y mtgo.css con
+  cualquier editor de texto y comprobarlo tú mismo.
+
+Chrome puede avisarte de que tienes "extensiones en modo desarrollador".
+Es normal en las extensiones instaladas a mano, fuera de la Chrome Web
+Store.
+
+
+AVISO
+-----
+Proyecto de un fan, sin relación con Endstep, Wizards of the Coast ni
+Daybreak (MTGO). Si Endstep cambia su web, algo puede descolocarse. Si te
+pasa, avisa a @imcoesus con una captura.
+
+
+-------------------------------------------------------------------------
+ENGLISH (short)
+-------------------------------------------------------------------------
+Chrome extension that makes endstep.cc games look and lay out like MTGO.
+
+Install: unzip → open chrome://extensions → turn on "Developer mode" →
+"Load unpacked" → pick the "endstep-mtgo-skin" folder → reload your game.
+
+Use: it turns on by itself on endstep.cc. Click the extension icon to turn
+it on or off.
+
+Privacy: collects and sends no data at all. It only runs on endstep.cc,
+makes no network requests, and its only permission ("storage") remembers
+the on/off switch.
+
+Made by @imcoesus — https://x.com/imcoesus

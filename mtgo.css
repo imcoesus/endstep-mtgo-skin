@@ -277,19 +277,51 @@ html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade.is-set .wr-pb-blade-face {
 html.mtgo-skin .wr-phase-bar--vertical button.wr-pb-blade:not(.is-set):hover .wr-pb-blade-face {
   background: #ffffff0d !important;
 }
+/* Stop markers, MTGO-style and matching the board: a marker ABOVE the
+   step name is a stop on the opponent's turn (blue, pointing down — they
+   sit at the top), one BELOW is a stop on your turn (gold, pointing up).
+   Each step is split into a top half (opponent) and bottom half (you), so
+   you click where the marker will appear. */
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade--opp { top: 0 !important; bottom: 50% !important; }
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade--mine { top: 50% !important; bottom: 0 !important; }
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade .wr-pb-blade-face { top: 0 !important; bottom: 0 !important; }
+
 html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade.is-set .wr-pb-blade-face::after {
   content: "";
   position: absolute;
-  bottom: 2px;
+  left: 50%;
+  translate: -50% 0;
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 5px solid #f2f2f2;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
   filter: drop-shadow(0 0 1px #000);
 }
-html.mtgo-skin .wr-pb-blade--mine.is-set .wr-pb-blade-face::after { left: 10px; }
-html.mtgo-skin .wr-pb-blade--opp.is-set .wr-pb-blade-face::after { right: 10px; border-bottom-color: #8fb6ff; }
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade--opp.is-set .wr-pb-blade-face::after {
+  top: 0;
+  border-top: 5px solid var(--mtgo-turn-opp, #5a95ee);
+}
+html.mtgo-skin .wr-phase-bar--vertical .wr-pb-blade--mine.is-set .wr-pb-blade-face::after {
+  bottom: 0;
+  border-bottom: 5px solid var(--mtgo-turn-me, #e3a43c);
+}
+/* Hovering a half previews where its marker would go */
+html.mtgo-skin .wr-phase-bar--vertical button.wr-pb-blade:not(.is-set):hover .wr-pb-blade-face::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  opacity: .45;
+}
+html.mtgo-skin .wr-phase-bar--vertical button.wr-pb-blade--opp:not(.is-set):hover .wr-pb-blade-face::after { top: 0; border-top: 5px solid var(--mtgo-turn-opp, #5a95ee); }
+html.mtgo-skin .wr-phase-bar--vertical button.wr-pb-blade--mine:not(.is-set):hover .wr-pb-blade-face::after { bottom: 0; border-bottom: 5px solid var(--mtgo-turn-me, #e3a43c); }
 html.mtgo-skin .wr-phase-legend { display: none; }
 html.mtgo-skin .wr-pb-section-label {
   font-family: var(--mtgo-ui);
@@ -466,9 +498,8 @@ html.mtgo-skin [data-testid="notice-chip-timer"] { background: #3f7fe0 !importan
   }
   html.mtgo-skin .wr-phase-bar--vertical .wr-pb--past .wr-pb-label { color: #6a6a6a; }
 
-  /* Stop markers sit centered under the step name, like MTGO's triangles */
-  html.mtgo-skin .wr-pb-blade--mine.is-set .wr-pb-blade-face::after { left: auto; right: 2px; bottom: -1px; }
-  html.mtgo-skin .wr-pb-blade--opp.is-set .wr-pb-blade-face::after { right: auto; left: 2px; bottom: -1px; }
+  /* Taller steps so the stop markers fit above and below the name */
+  html.mtgo-skin .wr-phase-bar--vertical .wr-pb { height: 28px; min-height: 28px; }
 
   /* Hold priority as a compact button at the end of the strip */
   html.mtgo-skin [data-testid="hold-priority-chip"] {
@@ -937,12 +968,13 @@ html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor=
 }
 html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"] { --mtgo-turn: var(--mtgo-turn-me); }
 html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] { --mtgo-turn: var(--mtgo-turn-opp); }
-html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"]::after,
-html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"]::after {
+/* "TURN" tag: a flex item at the end of the header's first row (name,
+   clock…), which wraps under the name — see "Player name" below. */
+html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"] [data-plate-section="header"] > :first-child::after,
+html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] [data-plate-section="header"] > :first-child::after {
   content: "TURN";
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  order: 99;
+  margin-left: auto;
   padding: 2px 7px;
   border-radius: 3px;
   background: var(--mtgo-turn);
@@ -958,10 +990,35 @@ html.mtgo-skin [data-turn="mine"][data-half="self"] {
 html.mtgo-skin [data-turn="opp"][data-half="opp"] {
   box-shadow: inset 0 -3px 0 var(--mtgo-turn-opp), inset 0 0 0 1px #00000055, inset 0 0 24px #00000040;
 }
-/* Keep the player name clear of the "TURN" tab */
-html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"] [data-plate-section="header"],
-html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] [data-plate-section="header"] {
-  padding-right: 48px;
+/* Player name: its own full-width row so it is never cut; the clock and
+   the "TURN" tag wrap onto the row below. Long names wrap instead of
+   scrolling in Endstep's marquee. The plate simply grows a little. */
+html.mtgo-skin [data-plate-section="header"] > :first-child {
+  flex-wrap: wrap;
+  row-gap: 6px;
+  align-items: center;
+}
+html.mtgo-skin [data-plate-section="header"] > :first-child > :first-child {
+  flex: 1 0 100%;
+  min-width: 0;
+}
+html.mtgo-skin .wr-player-nameplate,
+html.mtgo-skin .wr-player-nameplate .wr-marquee,
+html.mtgo-skin .wr-player-nameplate .wr-marquee-track {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+html.mtgo-skin .wr-player-nameplate {
+  font-size: 14px;
+  line-height: 1.25;
 }
 
 /* ---------- 17. Priority, hold priority & full screen → top bar ---------
@@ -1030,4 +1087,38 @@ html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor=
   /* The hold wrapper is a CSS container (container-type: inline-size), so
      its content can't size it: width:auto collapses to 0. Fix the width. */
   html.mtgo-skin.mtgo-has-topbar .mtgo-bar-hold { width: 136px !important; justify-content: flex-end; }
+}
+
+/* Match/reveals chips on the bar: size to their text, hide Endstep's corner
+   decorations (tagged .mtgo-chip-deco by content.js), one tidy line. */
+@media (min-width: 768px) {
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip,
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 40vw !important;
+    overflow: hidden !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-chip-deco { display: none !important; }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    line-height: 1 !important;
+    font-size: 12px !important;
+    font-variant-numeric: tabular-nums;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip .mtgo-chip-deco { display: none !important; }
+  /* "MATCH" label stays as a small blue tag */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip .mtgo-match-label {
+    color: #6ea8ff !important;
+    font-weight: 800 !important;
+    font-size: 10px !important;
+    letter-spacing: .08em !important;
+    text-transform: uppercase;
+  }
 }

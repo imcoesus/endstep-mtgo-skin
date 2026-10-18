@@ -213,6 +213,16 @@ function syncMatchChips() {
   // textContent glues the spans together ("MatchGame 1 / 30 – 0"), so no \b
   tagChip(scope, 'mtgo-match-chip', /^match\s*game\s*\d+\s*\/\s*\d/i, /reveals/i);
   tagChip(scope, 'mtgo-reveals-chip', /^reveals?\s*\d+$/i, /match|game/i);
+  // Endstep decorates these chips with absolutely positioned corner brackets
+  // sized for their original box; once restyled on the bar they land on top
+  // of the text. Hide any absolutely positioned descendant.
+  for (const chip of document.querySelectorAll('.mtgo-match-chip, .mtgo-reveals-chip')) {
+    for (const el of chip.querySelectorAll('*')) {
+      const pos = getComputedStyle(el).position;
+      el.classList.toggle('mtgo-chip-deco', pos === 'absolute' || pos === 'fixed');
+      el.classList.toggle('mtgo-match-label', !el.children.length && /^match$/i.test(el.textContent.trim()));
+    }
+  }
 }
 
 // Right side of the bar, laid out right-to-left: full screen, reveals, hold

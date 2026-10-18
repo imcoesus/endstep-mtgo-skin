@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Endstep MTGO Skin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Gives endstep.cc the look and layout of Magic: The Gathering Online. Visual only, collects no data.",
   "author": "@imcoesus",
   "homepage_url": "https://x.com/imcoesus",

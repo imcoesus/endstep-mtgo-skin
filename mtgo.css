@@ -798,3 +798,236 @@ html.mtgo-skin .gl-turn--opp .gl-turn-owner { color: var(--mtgo-title); }
     overflow: auto;
   }
 }
+
+/* ---------- 15. Match bar (top) -----------------------------------------
+   content.js injects #mtgo-topbar on game pages and tags Endstep's match
+   chip (.mtgo-match-chip, "MATCH Game 1 / 3 0–0") and reveals chip
+   (.mtgo-reveals-chip). They're pinned onto the bar with position:fixed;
+   the turn chip moves there too, centered, as the main turn indicator.
+
+   ┌ MATCH Game 1/3 · 0–0 ───── [ YOUR TURN · T4 ] ───── 👁 Revealed 7 ┐
+   ======================================================================== */
+#mtgo-topbar { display: none; }
+
+@media (min-width: 768px) {
+  html.mtgo-skin { --mtgo-bar-h: 34px; --mtgo-log-space: 0px; }
+  html.mtgo-skin.mtgo-log-open { --mtgo-log-space: var(--mtgo-log-w); }
+
+  html.mtgo-skin #mtgo-topbar {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: var(--mtgo-bar-h);
+    z-index: 46;
+    background: linear-gradient(#2f2f2f, #1d1d1d);
+    border-bottom: 1px solid #000;
+    box-shadow: inset 0 1px 0 #444, 0 1px 3px #000a;
+    pointer-events: none;
+  }
+
+  /* Push the game (and the docked log) below the bar */
+  html.mtgo-skin.mtgo-has-topbar .wr-game-grid {
+    margin-top: var(--mtgo-bar-h);
+    height: calc(100dvh - var(--mtgo-bar-h) - var(--wr-replay-bar-h, 0px));
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-log-dock { top: var(--mtgo-bar-h) !important; }
+  html.mtgo-skin.mtgo-has-topbar [data-testid="chip-column"] { top: calc(var(--mtgo-bar-h) + 12px) !important; }
+
+  /* Shared look for everything pinned on the bar */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip,
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip,
+  html.mtgo-skin.mtgo-has-topbar .wr-rail-right .wr-turn-chip {
+    position: fixed !important;
+    top: 5px !important;
+    height: 24px !important;
+    z-index: 47;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px !important;
+    border-radius: 12px !important;
+    font-family: var(--mtgo-ui) !important;
+    font-size: 12px !important;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  /* Match + games, left */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip {
+    left: 8px !important;
+    background: #161616 !important;
+    border: 1px solid #000 !important;
+    box-shadow: inset 0 1px 0 #333;
+    color: #ddd !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-match-chip * {
+    font-family: var(--mtgo-ui) !important;
+    letter-spacing: .02em !important;
+    color: inherit;
+  }
+
+  /* Reveals, right: an obvious button that says what it is */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip {
+    right: calc(var(--mtgo-log-space) + 8px) !important;
+    cursor: pointer;
+    font-weight: 700 !important;
+    color: #fff !important;
+    background: linear-gradient(#3b7be6, #2457b0) !important;
+    border: 1px solid #0d2a5c !important;
+    box-shadow: inset 0 1px 0 #7fb0ff;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 5C6.5 5 2.7 9.3 1.5 12c1.2 2.7 5 7 10.5 7s9.3-4.3 10.5-7C21.3 9.3 17.5 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-2.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/></svg>") center / contain no-repeat;
+            mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 5C6.5 5 2.7 9.3 1.5 12c1.2 2.7 5 7 10.5 7s9.3-4.3 10.5-7C21.3 9.3 17.5 5 12 5zm0 11.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9zm0-2.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'/></svg>") center / contain no-repeat;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip * { color: #fff !important; font-family: var(--mtgo-ui) !important; }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip:hover { filter: brightness(1.12); }
+
+  /* ---- Whose turn: big colored pill, centered on the bar --------------- */
+  html.mtgo-skin.mtgo-has-topbar .wr-rail-right .wr-turn-chip {
+    left: calc((100vw - var(--mtgo-log-space)) / 2) !important;
+    translate: -50% 0;
+    flex-direction: row !important;
+    padding: 0 16px !important;
+    animation: none !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip .wr-turn-sep { display: inline !important; }
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip .wr-turn-owner,
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip .wr-turn-num,
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip .wr-turn-player {
+    font-family: var(--mtgo-ui) !important;
+    font-style: normal !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: .06em !important;
+    max-width: none !important;
+    color: inherit !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip[data-live="mine"] {
+    background: linear-gradient(#f2bb55, #c98a24) !important;
+    border: 1px solid #5a3a08 !important;
+    box-shadow: inset 0 1px 0 #ffe2a3, 0 0 10px #e3a43c66;
+    color: #1a1206 !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .wr-turn-chip[data-live="opp"] {
+    background: linear-gradient(#5a95ee, #2f63c0) !important;
+    border: 1px solid #0d2a5c !important;
+    box-shadow: inset 0 1px 0 #a9c9ff, 0 0 10px #3f7fe066;
+    color: #fff !important;
+  }
+}
+
+/* ---------- 16. Active turn on the board --------------------------------
+   Gold = your turn, blue = opponent's. The active player's plate gets a
+   thick side bar and a "TURN" tab, and their battlefield a colored top
+   edge, so whose turn it is reads at a glance anywhere on screen. Priority
+   (the full gold outline from data-deciding) stays a separate signal. */
+html.mtgo-skin { --mtgo-turn-me: #e3a43c; --mtgo-turn-opp: #5a95ee; }
+
+html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"],
+html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] {
+  position: relative;
+  border-left: 5px solid var(--mtgo-turn) !important;
+}
+html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"] { --mtgo-turn: var(--mtgo-turn-me); }
+html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] { --mtgo-turn: var(--mtgo-turn-opp); }
+html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"]::after,
+html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"]::after {
+  content: "TURN";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--mtgo-turn);
+  color: #111;
+  font: 800 10px/1.4 var(--mtgo-ui);
+  letter-spacing: .08em;
+  pointer-events: none;
+}
+
+html.mtgo-skin [data-turn="mine"][data-half="self"] {
+  box-shadow: inset 0 3px 0 var(--mtgo-turn-me), inset 0 0 0 1px #00000055, inset 0 0 24px #00000040;
+}
+html.mtgo-skin [data-turn="opp"][data-half="opp"] {
+  box-shadow: inset 0 -3px 0 var(--mtgo-turn-opp), inset 0 0 0 1px #00000055, inset 0 0 24px #00000040;
+}
+/* Keep the player name clear of the "TURN" tab */
+html.mtgo-skin:has(.wr-turn-chip[data-live="mine"]) .wr-plate[data-player-anchor="me"] [data-plate-section="header"],
+html.mtgo-skin:has(.wr-turn-chip[data-live="opp"]) .wr-plate[data-player-anchor="opp"] [data-plate-section="header"] {
+  padding-right: 48px;
+}
+
+/* ---------- 17. Priority, hold priority & full screen → top bar ---------
+   Takes everything that isn't a step out of the phase strip so the strip
+   reads as just the turn's phases. content.js tags the pieces and sets
+   --mtgo-bar-right on each (measured, right-to-left). */
+@media (min-width: 768px) {
+  html.mtgo-skin.mtgo-has-topbar .mtgo-reveals-chip {
+    right: var(--mtgo-bar-right, calc(var(--mtgo-log-space) + 8px)) !important;
+  }
+
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-priority,
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-hold,
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-fullscreen {
+    position: fixed !important;
+    top: 5px !important;
+    right: var(--mtgo-bar-right, 8px) !important;
+    left: auto !important;
+    height: 24px !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 47;
+    display: inline-flex !important;
+    align-items: center;
+    align-self: auto !important;
+    order: 0 !important;
+  }
+
+  /* Priority: who can act right now — green when it's you */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-priority {
+    padding: 0 12px !important;
+    border-radius: 12px !important;
+    border: 1px solid #000 !important;
+    background: #161616 !important;
+    box-shadow: inset 0 1px 0 #333;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-priority .wr-priority-label {
+    font-family: var(--mtgo-ui) !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: .06em !important;
+    color: #9a9a9a !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-priority.wr-priority-badge-mine {
+    background: linear-gradient(#3fa65a, #23763a) !important;
+    border-color: #0d3a18 !important;
+    box-shadow: inset 0 1px 0 #8fe0a3, 0 0 8px #3fa65a66;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-priority.wr-priority-badge-mine .wr-priority-label { color: #fff !important; }
+
+  /* Hold priority: compact pill (its wrapper is the positioned element) */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-hold [data-testid="hold-priority-chip"] {
+    height: 24px;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+  }
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-fullscreen button { color: #9a9a9a; }
+
+  /* With those gone, the strip is just the steps: give them the room */
+  html.mtgo-skin.mtgo-has-topbar .wr-rail-right { padding: 0 10px; }
+}
+@media (min-width: 768px) {
+  /* The hold wrapper is a CSS container (container-type: inline-size), so
+     its content can't size it: width:auto collapses to 0. Fix the width. */
+  html.mtgo-skin.mtgo-has-topbar .mtgo-bar-hold { width: 136px !important; justify-content: flex-end; }
+}

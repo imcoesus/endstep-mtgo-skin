@@ -170,17 +170,89 @@ function watchHalves() {
 }
 window.addEventListener('resize', publishHalfRects);
 
+// ---------------------------------------------------------------------------
+// Match bar: a strip across the top of the game, like MTGO's window title
+// bar, holding the match/game score, whose turn it is and the reveals.
+// The bar is our own element; Endstep's chips stay where React rendered them
+// and are only tagged here — mtgo.css pins them onto the bar with fixed
+// positioning, so React never sees a moved node.
+// ---------------------------------------------------------------------------
+const TOPBAR_ID = 'mtgo-topbar';
+
+function syncTopBar() {
+  const inGame = !!document.querySelector('.wr-game-grid');
+  root.classList.toggle('mtgo-has-topbar', inGame);
+  let bar = document.getElementById(TOPBAR_ID);
+  if (inGame && !bar) {
+    bar = document.createElement('div');
+    bar.id = TOPBAR_ID;
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+  } else if (!inGame && bar) {
+    bar.remove();
+  }
+}
+
+// Tags the outermost element under `scope` whose text matches `re`, without
+// swallowing a parent that also holds other chips (checked with `notRe`).
+function tagChip(scope, cls, re, notRe) {
+  let found = null;
+  for (const el of scope.querySelectorAll('div, span, button, a')) {
+    const text = el.textContent.replace(/\s+/g, ' ').trim();
+    if (!re.test(text) || (notRe && notRe.test(text)) || text.length > 60) continue;
+    if (el.closest('.mtgo-log-dock, .mtgo-zone-dock, [data-testid="chip-column"]')) continue;
+    if (!found || el.contains(found)) found = el;
+  }
+  for (const el of document.querySelectorAll('.' + cls)) if (el !== found) el.classList.remove(cls);
+  found?.classList.add(cls);
+}
+
+function syncMatchChips() {
+  const scope = document.querySelector('.wr-game-grid');
+  if (!scope) return;
+  // textContent glues the spans together ("MatchGame 1 / 30 – 0"), so no \b
+  tagChip(scope, 'mtgo-match-chip', /^match\s*game\s*\d+\s*\/\s*\d/i, /reveals/i);
+  tagChip(scope, 'mtgo-reveals-chip', /^reveals?\s*\d+$/i, /match|game/i);
+}
+
+// Right side of the bar, laid out right-to-left: full screen, reveals, hold
+// priority, priority. Widths vary (and some chips come and go), so each one
+// gets its offset measured here instead of a hard-coded right: value.
+// The hold chip's wrapper is tagged rather than the button: the wrapper is a
+// CSS container, which would trap a position:fixed child inside it.
+function layoutBarRight() {
+  const rail = document.querySelector('.wr-rail-right');
+  if (!rail || !root.classList.contains('mtgo-has-topbar')) return;
+  const items = [
+    [rail.querySelector(':scope > .flex.justify-end'), 'mtgo-bar-fullscreen'],
+    [document.querySelector('.mtgo-reveals-chip'), null],
+    [rail.querySelector(':scope > [data-testid="hold-priority-chip"], :scope > :has([data-testid="hold-priority-chip"])'), 'mtgo-bar-hold'],
+    [rail.querySelector('.wr-priority-badge'), 'mtgo-bar-priority'],
+  ];
+  let x = (docked?.offsetWidth || 0) + 8;
+  for (const [el, cls] of items) {
+    if (!el) continue;
+    if (cls) el.classList.add(cls);
+    el.style.setProperty('--mtgo-bar-right', x + 'px');
+    if (el.offsetWidth) x += el.offsetWidth + 8;
+  }
+}
+window.addEventListener('resize', layoutBarRight);
+
 let scheduled = false;
 new MutationObserver(() => {
   if (scheduled) return;
   scheduled = true;
   requestAnimationFrame(() => {
     scheduled = false;
+    syncTopBar();
+    syncMatchChips();
     syncLogDock();
     autoOpenLog();
     autoPopOut();
     watchHalves();
     syncZoneDocks();
     publishHalfRects();
+    layoutBarRight();
   });
 }).observe(root, { childList: true, subtree: true });

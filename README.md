@@ -38,7 +38,7 @@ También funciona en Brave, Edge, Arc, Opera y otros navegadores basados en Chro
 - **Log:** si lo cierras con la ✕ se queda cerrado. Se vuelve a abrir con el botón **Log** de abajo a la izquierda.
 - **Zonas:** se abren solas cuando tienen cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las muestran u ocultan en la columna.
 - **Stops:** pulsa la mitad de arriba de una fase para el turno del rival y la de abajo para el tuyo.
-- **Redimensionar:** arrastra el borde izquierdo del log o el borde derecho de la columna de zonas. El contenido (cartas y texto) se agranda o encoge con el ancho, y el tamaño se recuerda. Doble clic en el borde para volver al tamaño por defecto.
+- **Redimensionar:** arrastra el borde izquierdo del log, el borde derecho de la columna de zonas o el borde de arriba de tu mano. El contenido (cartas y texto) se agranda o encoge con el tamaño, y se recuerda. Doble clic en el borde para volver al tamaño por defecto.
 
 ## Privacidad y seguridad
 

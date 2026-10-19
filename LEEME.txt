@@ -58,9 +58,9 @@ CÓMO USARLA
 - Stops: en la barra de fases, la mitad de arriba de cada fase pone el
   stop en el turno del rival (marcador azul encima) y la de abajo en tu
   turno (marcador dorado debajo).
-- Redimensionar: arrastra el borde izquierdo del log o el borde derecho
-  de la columna de zonas. Las cartas y el texto se agrandan o encogen con
-  el ancho, y el tamaño se recuerda. Doble clic en el borde lo devuelve al
+- Redimensionar: arrastra el borde izquierdo del log, el borde derecho
+  de la columna de zonas o el borde de arriba de tu mano. Las cartas y el
+  texto se agrandan o encogen con el tamaño, y se recuerda. Doble clic en el borde lo devuelve al
   tamaño por defecto.
 
 

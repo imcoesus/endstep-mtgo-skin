@@ -1272,3 +1272,59 @@ html.mtgo-auto-zone [data-state="open"][class*="fixed"][class*="inset-0"] {
   html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid::before { border: 0; box-shadow: none; }
   html.mtgo-skin:not(.mtgo-has-zones) .mtgo-resize--zone { display: none; }
 }
+
+/* ---------- 20. No page scroll in game; resizable hand -------------------
+   The game fills the window exactly, so the page itself never needs to
+   scroll — lock it (Space would otherwise scroll it; content.js also
+   cancels that default). The hand gets a height from --mtgo-hand-h, set by
+   dragging its top edge, and the cards zoom by --mtgo-hand-scale. */
+html.mtgo-skin.mtgo-has-topbar,
+html.mtgo-skin.mtgo-has-topbar body {
+  overflow: hidden !important;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+@media (min-width: 768px) {
+  html.mtgo-skin .wr-main-col > .zone-hand {
+    height: var(--mtgo-hand-h, 196px) !important;
+    max-height: none !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    box-sizing: border-box;
+  }
+  html.mtgo-skin .wr-main-col > .zone-hand [data-testid="hand-cards"] {
+    zoom: var(--mtgo-hand-scale, 1);
+  }
+
+  html.mtgo-skin .mtgo-resize--hand {
+    width: auto;
+    height: 8px;
+    left: var(--mtgo-hand-left);
+    width: var(--mtgo-hand-width);
+    top: calc(var(--mtgo-hand-top) - 4px);
+    cursor: row-resize;
+  }
+  html.mtgo-skin .mtgo-resize--hand::after { inset: 3px 0; }
+  html.mtgo-skin.mtgo-resizing:has(.mtgo-resize--hand:active),
+  html.mtgo-skin.mtgo-resizing:has(.mtgo-resize--hand:active) * { cursor: row-resize !important; }
+}
+@media (min-width: 768px) {
+  /* Visible grip on the hand's top edge so the handle is easy to find */
+  html.mtgo-skin .mtgo-resize--hand { height: 10px; top: calc(var(--mtgo-hand-top) - 5px); }
+  html.mtgo-skin .mtgo-resize--hand::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    width: 44px;
+    height: 4px;
+    border-radius: 2px;
+    background: #6a6a6a;
+    box-shadow: 0 1px 0 #000;
+    z-index: 1;
+  }
+  html.mtgo-skin .mtgo-resize--hand:hover::before,
+  html.mtgo-skin.mtgo-resizing .mtgo-resize--hand::before { background: var(--mtgo-gold); }
+}

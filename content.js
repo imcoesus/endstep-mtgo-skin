@@ -224,6 +224,13 @@ async function autoOpenZones() {
 // each half that is actually visible (clipped by its panel and kept below the
 // top bar), so a window can never start under the bar or off-screen.
 function publishHalfRects() {
+  const hand = document.querySelector('.wr-main-col > .zone-hand');
+  if (hand) {
+    const h = hand.getBoundingClientRect();
+    root.style.setProperty('--mtgo-hand-top', h.top + 'px');
+    root.style.setProperty('--mtgo-hand-left', h.left + 'px');
+    root.style.setProperty('--mtgo-hand-width', h.width + 'px');
+  }
   const barBottom = document.getElementById(TOPBAR_ID)?.getBoundingClientRect().bottom || 0;
   for (const [half, side] of [['self', 'me'], ['opp', 'opp']]) {
     const el = document.querySelector(`[data-half="${half}"]`);
@@ -279,6 +286,17 @@ document.addEventListener('click', (e) => {
   e.stopImmediatePropagation();
   close.click();
 }, true);
+
+// Space is Endstep's "pass priority" key, but the browser also scrolls the
+// page with it. Cancel only the browser's default action, on window in the
+// bubble phase — after Endstep has handled the key — and never while typing
+// or on a focused button (where Space means "press").
+window.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || !root.classList.contains('mtgo-has-topbar')) return;
+  const t = e.target;
+  if (t.closest?.('input, textarea, select, button, [contenteditable=""], [contenteditable="true"]')) return;
+  e.preventDefault();
+});
 
 // ---------------------------------------------------------------------------
 // Match bar: a strip across the top of the game, like MTGO's window title
@@ -368,6 +386,8 @@ window.addEventListener('resize', layoutBarRight);
 const PANES = {
   log:  { varName: '--mtgo-log-w',  scaleVar: '--mtgo-log-scale',  base: 300, min: 220, max: 640 },
   zone: { varName: '--mtgo-zone-w', scaleVar: '--mtgo-zone-scale', base: 200, min: 150, max: 440 },
+  // The hand is sized by height; its cards zoom with it
+  hand: { varName: '--mtgo-hand-h', scaleVar: '--mtgo-hand-scale', base: 196, min: 120, max: 460 },
 };
 const paneWidths = {};
 
@@ -394,7 +414,7 @@ function makeHandle(key, widthFromPointer) {
     try { handle.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
     root.classList.add('mtgo-resizing');
     const move = (ev) => {
-      applyPaneWidth(key, widthFromPointer(ev.clientX));
+      applyPaneWidth(key, widthFromPointer(ev));
       publishHalfRects();
       layoutBarRight();
     };
@@ -419,8 +439,9 @@ function makeHandle(key, widthFromPointer) {
 function syncResizeHandles() {
   const inGame = root.classList.contains('mtgo-has-topbar');
   for (const [key, fromPointer] of [
-    ['log', (x) => window.innerWidth - x],
-    ['zone', (x) => x - (document.querySelector('.wr-rail-left')?.getBoundingClientRect().right || 0)],
+    ['log', (e) => window.innerWidth - e.clientX],
+    ['zone', (e) => e.clientX - (document.querySelector('.wr-rail-left')?.getBoundingClientRect().right || 0)],
+    ['hand', (e) => (document.querySelector('.wr-main-col > .zone-hand')?.getBoundingClientRect().bottom || window.innerHeight) - e.clientY],
   ]) {
     let handle = document.querySelector(`.mtgo-resize--${key}`);
     if (inGame && !handle) document.body.appendChild(makeHandle(key, fromPointer));

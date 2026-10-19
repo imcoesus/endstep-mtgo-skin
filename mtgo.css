@@ -401,9 +401,11 @@ html.mtgo-skin [data-testid="notice-chip-timer"] { background: #3f7fe0 !importan
     min-height: 0;
     flex: none;
   }
-  html.mtgo-skin .wr-main-col > .wr-resizable-panel:nth-child(1) { grid-area: opp; }
-  html.mtgo-skin .wr-main-col > .wr-resizable-panel:nth-of-type(2),
-  html.mtgo-skin .wr-main-col > .wr-resizable-panel.flex-1 { grid-area: me; }
+  /* Placed by what they contain, not their position: Endstep can render
+     other elements ahead of them, and a panel that misses its area gets
+     auto-placed into whatever cell is free (even the 0-wide zone column) */
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel:has([data-half="opp"]) { grid-area: opp; }
+  html.mtgo-skin .wr-main-col > .wr-resizable-panel:has([data-half="self"]) { grid-area: me; }
   html.mtgo-skin .wr-main-col > .zone-hand {
     grid-area: hand;
     height: auto;
@@ -1121,4 +1123,152 @@ html.mtgo-skin .wr-player-nameplate {
     letter-spacing: .08em !important;
     text-transform: uppercase;
   }
+}
+
+/* ---------- 18. Zone column (MTGO-style graveyard / exile / revealed) ---
+   A fixed column between the player rail and the battlefields. Each
+   player's zone windows stack beside their own battlefield — opponent on
+   top, you below — sharing that height evenly, in MTGO's order:
+   Graveyard, Exile, Revealed. content.js sets --mtgo-zone-slot and
+   --mtgo-zone-count on each window; this replaces the in-battlefield
+   docking from section 12.
+
+   ┌──────┬────────────┬──────────────────────────┐
+   │ opp  │ Graveyard  │  opponent battlefield     │
+   │      │ Exile      │                           │
+   ├ ···  ├────────────┼──────────────────────────┤
+   │ you  │ Graveyard  │  your battlefield         │
+   │      │ Exile      │                           │
+   └──────┴────────────┴──────────────────────────┘ */
+@media (min-width: 768px) {
+  html.mtgo-skin { --mtgo-zone-w: 200px; --mtgo-zone-gap: 6px; }
+
+  html.mtgo-skin .wr-game-grid {
+    grid-template-columns: 172px var(--mtgo-zone-w) minmax(0, 1fr);
+    grid-template-areas:
+      "left zopp opp"
+      "left zme  me"
+      "left tray tray"
+      "left phase phase"
+      "left hand hand";
+  }
+  /* The column is empty grid space; give it the rail's chrome */
+  html.mtgo-skin .wr-game-grid::before {
+    content: "";
+    grid-area: zopp / zopp / zme / zme;
+    background: var(--mtgo-chrome);
+    border-right: 1px solid #000;
+    box-shadow: inset -1px 0 0 #2e2e2e;
+  }
+
+  /* Battlefields no longer need room carved out for docked windows */
+  html.mtgo-skin [data-half="self"],
+  html.mtgo-skin [data-half="opp"] { padding-left: 12px !important; padding-right: 12px !important; }
+
+  html.mtgo-skin .mtgo-zone-dock {
+    width: calc(var(--mtgo-zone-w) - 2 * var(--mtgo-zone-gap)) !important;
+    height: calc((var(--mtgo-zone-h) - (var(--mtgo-zone-count, 1) + 1) * var(--mtgo-zone-gap))
+                 / var(--mtgo-zone-count, 1)) !important;
+    left: calc(var(--mtgo-side-left) - var(--mtgo-zone-w) + var(--mtgo-zone-gap)) !important;
+    right: auto !important;
+    top: calc(var(--mtgo-side-top) + var(--mtgo-zone-gap)
+              + var(--mtgo-zone-slot, 0) * (var(--mtgo-zone-h) - var(--mtgo-zone-gap))
+                / var(--mtgo-zone-count, 1)) !important;
+  }
+  html.mtgo-skin .mtgo-zone-dock--opp {
+    --mtgo-zone-h: var(--mtgo-opp-height);
+    --mtgo-side-top: var(--mtgo-opp-top);
+    --mtgo-side-left: var(--mtgo-opp-left);
+  }
+  html.mtgo-skin .mtgo-zone-dock--me {
+    --mtgo-zone-h: var(--mtgo-me-height);
+    --mtgo-side-top: var(--mtgo-me-top);
+    --mtgo-side-left: var(--mtgo-me-left);
+  }
+
+  /* MTGO section header: blue badge on the left, title, count */
+  html.mtgo-skin .mtgo-zone-dock > :first-child {
+    position: relative;
+    padding-left: 22px !important;
+    font-size: 13px;
+  }
+  html.mtgo-skin .mtgo-zone-dock > :first-child::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    translate: 0 -50%;
+    width: 10px;
+    height: 14px;
+    border-radius: 2px 2px 5px 5px;
+    background: linear-gradient(#5a95ee, #2457b0);
+    box-shadow: inset 0 1px 0 #a9c9ff;
+  }
+}
+
+/* ---------- 19. Resizable log & zone column ------------------------------
+   content.js injects two handles and sets --mtgo-log-w / --mtgo-zone-w
+   (pixels) and --mtgo-log-scale / --mtgo-zone-scale (width ÷ default).
+   Pane content zooms by the scale, so cards and text grow and shrink with
+   the pane instead of just reflowing. */
+.mtgo-resize { display: none; }
+
+@media (min-width: 768px) {
+  html.mtgo-skin .mtgo-resize {
+    display: block;
+    position: fixed;
+    z-index: 48;
+    width: 8px;
+    cursor: col-resize;
+    touch-action: none;
+  }
+  html.mtgo-skin .mtgo-resize::after {
+    content: "";
+    position: absolute;
+    inset: 0 3px;
+    border-radius: 1px;
+    background: #ffffff14;
+    transition: background .15s;
+  }
+  html.mtgo-skin .mtgo-resize:hover::after,
+  html.mtgo-skin.mtgo-resizing .mtgo-resize::after { background: var(--mtgo-gold); }
+
+  /* Log: on its left edge, full height under the bar; only while it's open */
+  html.mtgo-skin .mtgo-resize--log {
+    top: var(--mtgo-bar-h);
+    bottom: 0;
+    right: calc(var(--mtgo-log-w) - 4px);
+  }
+  html.mtgo-skin:not(.mtgo-log-open) .mtgo-resize--log { display: none; }
+
+  /* Zone column: on its right edge, alongside both battlefields */
+  html.mtgo-skin .mtgo-resize--zone {
+    top: var(--mtgo-opp-top);
+    height: calc(var(--mtgo-me-top) + var(--mtgo-me-height) - var(--mtgo-opp-top));
+    left: calc(172px + var(--mtgo-zone-w) - 4px);
+  }
+
+  /* Content scales with the pane (headers keep their size) */
+  html.mtgo-skin .mtgo-zone-dock > :not(:first-child) { zoom: var(--mtgo-zone-scale, 1); }
+  html.mtgo-skin .mtgo-log-dock > :not(:first-child) { zoom: var(--mtgo-log-scale, 1); }
+
+  /* No selection or hover effects fighting the drag */
+  html.mtgo-skin.mtgo-resizing,
+  html.mtgo-skin.mtgo-resizing * { user-select: none !important; cursor: col-resize !important; }
+}
+
+/* While content.js auto-opens zones it pops each modal out within a frame
+   or two; hide the modal and its backdrop meanwhile so nothing flashes. */
+html.mtgo-auto-zone [role="dialog"][aria-modal="true"],
+html.mtgo-auto-zone [data-state="open"][class*="fixed"][class*="inset-0"] {
+  visibility: hidden !important;
+}
+
+/* Zone column collapses when no zone window is shown (content.js sets
+   html.mtgo-has-zones while at least one is docked) */
+@media (min-width: 768px) {
+  html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid { grid-template-columns: 172px 0 minmax(0, 1fr); }
+  /* Keep the (now 0-wide) column's cells occupied so nothing lands there */
+  html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid::before { border: 0; box-shadow: none; }
+  html.mtgo-skin:not(.mtgo-has-zones) .mtgo-resize--zone { display: none; }
 }

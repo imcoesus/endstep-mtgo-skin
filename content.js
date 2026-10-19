@@ -69,10 +69,10 @@ const ZONE_CLASS = 'mtgo-zone-dock';
 // Zone windows are titled "coe's Graveyard", "Garo's Exile"… — possessive and
 // capitalized. Case-sensitive on purpose: notices say "coe's library to their
 // graveyard" in lowercase and must not be docked.
-const ZONE_TITLE = /['’]s (Graveyard|Exile|Library|Sideboard|Command Zone)(?![a-z])/;
+const ZONE_TITLE = /['’]s (Graveyard|Exile|Library|Sideboard|Command Zone)(?![a-z])| revealed \d/;
+// MTGO stacks each player's zones in this order
+const ZONE_KINDS = [['graveyard', /graveyard/i], ['exile', /exile/i], ['revealed', /revealed/i], ['other', /./]];
 const NOTICE = '[data-testid="chip-column"], [data-testid^="notice"]';
-const ZONE_W = 190;  // keep in sync with --mtgo-zone-w in mtgo.css
-const ZONE_GAP = 6;
 
 function playerName(anchor) {
   return document
@@ -82,7 +82,8 @@ function playerName(anchor) {
 
 // The modal's "Pop out" button: press it so zones always open as windows.
 function autoPopOut() {
-  if (!root.classList.contains('mtgo-skin')) return;
+  if (!root.classList.contains('mtgo-skin')) return false;
+  let popped = false;
   for (const btn of document.querySelectorAll('[role="dialog"] button')) {
     if (!/^\W*pop out\s*$/i.test(btn.textContent)) continue;
     const dialog = btn.closest('[role="dialog"]');
@@ -90,7 +91,9 @@ function autoPopOut() {
     if (!ZONE_TITLE.test(dialog.textContent.slice(0, 200))) continue;
     dialog.dataset.mtgoPopped = '1';
     btn.click();
+    popped = true;
   }
+  return popped;
 }
 
 // Floating windows are fixed-position, smaller than the screen, not modal,
@@ -116,6 +119,13 @@ function findZoneWindows() {
   return out;
 }
 
+function zoneKind(head) {
+  return ZONE_KINDS.findIndex(([, re]) => re.test(head));
+}
+
+// Zone windows live in a column left of the battlefields: the opponent's
+// stacked beside their half, mine beside mine, each side split evenly
+// between its open zones (graveyard, exile, revealed…), like MTGO.
 function syncZoneDocks() {
   const me = playerName('me');
   const opp = playerName('opp');
@@ -125,37 +135,107 @@ function syncZoneDocks() {
     const mine = me && (head.includes(`${me}'s`) || head.includes(`${me}’s`));
     const theirs = opp && (head.includes(`${opp}'s`) || head.includes(`${opp}’s`));
     const side = mine ? 'me' : theirs ? 'opp' : me && head.includes(me) ? 'me' : 'opp';
-    zones[side].push(el);
+    zones[side].push({ el, kind: zoneKind(head) });
   }
   for (const side of ['me', 'opp']) {
-    zones[side].forEach((el, i) => {
+    zones[side].sort((a, b) => a.kind - b.kind);
+    zones[side].forEach(({ el, kind }, i) => {
       el.classList.add(ZONE_CLASS);
       el.classList.toggle(ZONE_CLASS + '--me', side === 'me');
       el.classList.toggle(ZONE_CLASS + '--opp', side === 'opp');
+      el.dataset.mtgoZone = ZONE_KINDS[kind][0];
       el.style.setProperty('--mtgo-zone-slot', i);
+      el.style.setProperty('--mtgo-zone-count', zones[side].length);
     });
-    const space = zones[side].length ? zones[side].length * (ZONE_W + ZONE_GAP) + ZONE_GAP : 0;
-    root.style.setProperty(`--mtgo-${side}-zone-space`, space + 'px');
   }
   // Drop the tag from windows that were closed or are no longer zones
+  const kept = new Set([...zones.me, ...zones.opp].map((z) => z.el));
+  // No zone shown → mtgo.css collapses the zone column to nothing
+  root.classList.toggle('mtgo-has-zones', kept.size > 0);
   for (const el of document.querySelectorAll('.' + ZONE_CLASS)) {
-    if (!zones.me.includes(el) && !zones.opp.includes(el)) {
+    if (!kept.has(el)) {
       el.classList.remove(ZONE_CLASS, ZONE_CLASS + '--me', ZONE_CLASS + '--opp');
+      delete el.dataset.mtgoZone;
     }
   }
 }
 
+// Open each player's graveyard and exile as soon as they have cards, so the
+// zone column fills itself like MTGO's. Each zone is opened, its modal popped
+// out the moment it renders (checked every frame), then the next one — all
+// in one quick chain, with the modals hidden so they don't flash. A zone the
+// player hides stays hidden for the rest of that game.
+const AUTO_ZONES = [
+  ['opp-graveyard', 'opp', 'graveyard'],
+  ['opp-exile', 'opp', 'exile'],
+  ['my-graveyard', 'me', 'graveyard'],
+  ['my-exile', 'me', 'exile'],
+];
+const autoOpenedZones = new Set();
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+let autoZoneBusy = false;
+
+function pendingAutoZones() {
+  const out = [];
+  for (const [anchor, side, kind] of AUTO_ZONES) {
+    const key = location.pathname + '|' + anchor;
+    if (autoOpenedZones.has(key)) continue;
+    const btn = document.querySelector(`button[data-zone-anchor="${anchor}"]`);
+    if (!btn || btn.disabled || !/\((?:[1-9]\d*)\)/.test(btn.getAttribute('aria-label') || '')) continue;
+    autoOpenedZones.add(key);
+    if (!document.querySelector(`.${ZONE_CLASS}--${side}[data-mtgo-zone="${kind}"]`)) out.push(btn);
+  }
+  return out;
+}
+
+// Clicks a zone button and pops its modal out as soon as it appears.
+async function openZoneDocked(btn) {
+  btn.click();
+  for (let i = 0; i < 60; i++) {          // ~1s at 60fps
+    await nextFrame();
+    if (autoPopOut()) {
+      // Keep modals hidden until Endstep has actually removed this one
+      for (let j = 0; j < 30 && document.querySelector('[role="dialog"][data-mtgo-popped]'); j++) {
+        await nextFrame();
+      }
+      return;
+    }
+  }
+}
+
+async function autoOpenZones() {
+  if (autoZoneBusy || !root.classList.contains('mtgo-skin') || window.innerWidth < 768) return;
+  // A zone modal the player opened by hand is handled by autoPopOut()
+  if ([...document.querySelectorAll('[role="dialog"] button')].some((b) => /pop out/i.test(b.textContent))) return;
+  const queue = pendingAutoZones();
+  if (!queue.length) return;
+  autoZoneBusy = true;
+  root.classList.add('mtgo-auto-zone');
+  try {
+    for (const btn of queue) await openZoneDocked(btn);
+  } finally {
+    root.classList.remove('mtgo-auto-zone');
+    autoZoneBusy = false;
+  }
+}
+
 // Docked windows are position:fixed, so they need the battlefield halves'
-// on-screen boxes. Publish them as CSS variables on <html>.
+// on-screen boxes. Publish them as CSS variables on <html>. Uses the part of
+// each half that is actually visible (clipped by its panel and kept below the
+// top bar), so a window can never start under the bar or off-screen.
 function publishHalfRects() {
+  const barBottom = document.getElementById(TOPBAR_ID)?.getBoundingClientRect().bottom || 0;
   for (const [half, side] of [['self', 'me'], ['opp', 'opp']]) {
     const el = document.querySelector(`[data-half="${half}"]`);
     if (!el) continue;
     const r = el.getBoundingClientRect();
-    root.style.setProperty(`--mtgo-${side}-top`, r.top + 'px');
+    const clip = (el.closest('.wr-resizable-panel') || el).getBoundingClientRect();
+    const top = Math.max(r.top, clip.top, barBottom);
+    const bottom = Math.min(r.bottom, clip.bottom);
+    root.style.setProperty(`--mtgo-${side}-top`, top + 'px');
     root.style.setProperty(`--mtgo-${side}-left`, r.left + 'px');
     root.style.setProperty(`--mtgo-${side}-right`, window.innerWidth - r.right + 'px');
-    root.style.setProperty(`--mtgo-${side}-height`, r.height + 'px');
+    root.style.setProperty(`--mtgo-${side}-height`, Math.max(0, bottom - top) + 'px');
   }
 }
 const halfObserver = new ResizeObserver(publishHalfRects);
@@ -165,10 +245,40 @@ function watchHalves() {
   if (halves.length === observedHalves.length && halves.every((h, i) => h === observedHalves[i])) return;
   halfObserver.disconnect();
   halves.forEach((h) => halfObserver.observe(h));
+  // The grid moves the halves without resizing them (top bar, log, zone
+  // column), so watch it too
+  const grid = document.querySelector('.wr-game-grid');
+  if (grid) halfObserver.observe(grid);
   observedHalves = halves;
   publishHalfRects();
 }
 window.addEventListener('resize', publishHalfRects);
+window.addEventListener('scroll', publishHalfRects, { capture: true, passive: true });
+
+// Skull (graveyard) and flame (exile) buttons toggle that zone in the
+// column: if it's already docked, close it instead of letting Endstep open
+// its modal again. Runs in the capture phase, before React sees the click.
+function zoneCloseButton(win) {
+  const buttons = [...win.querySelectorAll('button')];
+  return buttons.find((b) => /close/i.test(b.getAttribute('aria-label') || b.title || ''))
+      || buttons.reverse().find((b) => /^[×✕x]$/i.test(b.textContent.trim()));
+}
+document.addEventListener('click', (e) => {
+  if (!root.classList.contains('mtgo-skin') || !e.isTrusted) return;
+  const btn = e.target.closest?.('button[data-zone-anchor]');
+  const auto = btn && AUTO_ZONES.find(([anchor]) => anchor === btn.dataset.zoneAnchor);
+  if (!auto) return;
+  const [anchor, side, kind] = auto;
+  const win = document.querySelector(`.${ZONE_CLASS}--${side}[data-mtgo-zone="${kind}"]`);
+  // Either way the player chose: don't auto-open this zone again this game
+  autoOpenedZones.add(location.pathname + '|' + anchor);
+  if (!win) return;               // not shown → Endstep opens it, we dock it
+  const close = zoneCloseButton(win);
+  if (!close) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  close.click();
+}, true);
 
 // ---------------------------------------------------------------------------
 // Match bar: a strip across the top of the game, like MTGO's window title
@@ -249,6 +359,75 @@ function layoutBarRight() {
 }
 window.addEventListener('resize', layoutBarRight);
 
+// ---------------------------------------------------------------------------
+// Resizable panes: drag the left edge of the docked log or the right edge of
+// the zone column. Widths live in CSS variables on <html> (--mtgo-log-w,
+// --mtgo-zone-w) plus a scale factor the content zooms by, so cards and text
+// grow with the pane. Double-click a handle to reset; sizes are remembered.
+// ---------------------------------------------------------------------------
+const PANES = {
+  log:  { varName: '--mtgo-log-w',  scaleVar: '--mtgo-log-scale',  base: 300, min: 220, max: 640 },
+  zone: { varName: '--mtgo-zone-w', scaleVar: '--mtgo-zone-scale', base: 200, min: 150, max: 440 },
+};
+const paneWidths = {};
+
+function applyPaneWidth(key, width) {
+  const pane = PANES[key];
+  const w = Math.round(Math.min(pane.max, Math.max(pane.min, width || pane.base)));
+  paneWidths[key] = w;
+  root.style.setProperty(pane.varName, w + 'px');
+  root.style.setProperty(pane.scaleVar, (w / pane.base).toFixed(3));
+}
+
+// Defaults first, then the saved sizes on top (whenever storage answers)
+for (const key of Object.keys(PANES)) applyPaneWidth(key);
+chrome.storage.local.get({ paneWidths: {} }, ({ paneWidths: saved }) => {
+  for (const key of Object.keys(PANES)) if (saved[key]) applyPaneWidth(key, saved[key]);
+});
+
+function makeHandle(key, widthFromPointer) {
+  const handle = document.createElement('div');
+  handle.className = `mtgo-resize mtgo-resize--${key}`;
+  handle.title = 'Drag to resize · double-click to reset';
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    try { handle.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
+    root.classList.add('mtgo-resizing');
+    const move = (ev) => {
+      applyPaneWidth(key, widthFromPointer(ev.clientX));
+      publishHalfRects();
+      layoutBarRight();
+    };
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      root.classList.remove('mtgo-resizing');
+      chrome.storage.local.set({ paneWidths: { ...paneWidths } });
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up, { once: true });
+    handle.addEventListener('pointercancel', up, { once: true });
+  });
+  handle.addEventListener('dblclick', () => {
+    applyPaneWidth(key, PANES[key].base);
+    publishHalfRects();
+    layoutBarRight();
+    chrome.storage.local.set({ paneWidths: { ...paneWidths } });
+  });
+  return handle;
+}
+
+function syncResizeHandles() {
+  const inGame = root.classList.contains('mtgo-has-topbar');
+  for (const [key, fromPointer] of [
+    ['log', (x) => window.innerWidth - x],
+    ['zone', (x) => x - (document.querySelector('.wr-rail-left')?.getBoundingClientRect().right || 0)],
+  ]) {
+    let handle = document.querySelector(`.mtgo-resize--${key}`);
+    if (inGame && !handle) document.body.appendChild(makeHandle(key, fromPointer));
+    if (!inGame && handle) handle.remove();
+  }
+}
+
 let scheduled = false;
 new MutationObserver(() => {
   if (scheduled) return;
@@ -256,10 +435,12 @@ new MutationObserver(() => {
   requestAnimationFrame(() => {
     scheduled = false;
     syncTopBar();
+    syncResizeHandles();
     syncMatchChips();
     syncLogDock();
     autoOpenLog();
     autoPopOut();
+    autoOpenZones();
     watchHalves();
     syncZoneDocks();
     publishHalfRects();

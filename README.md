@@ -15,7 +15,9 @@ Made by [@imcoesus](https://x.com/imcoesus).
 - **Estilo MTGO:** gris carbón, campo de batalla gris pizarra, vidas grandes en blanco, botones con relieve.
 - **Layout MTGO:** columna izquierda con jugadores y prompt, campo del rival arriba y el tuyo abajo, barra de fases horizontal encima de la mano.
 - **Log fijo a la derecha**, de arriba a abajo. Se abre solo al empezar cada partida.
-- **Zonas pegadas al campo:** cementerio, exilio y cartas reveladas se quedan abiertos. Los tuyos van a la derecha de tu campo y los del rival arriba a la izquierda del suyo.
+- **Columna de zonas, como en MTGO:** cementerio, exilio y cartas reveladas de cada jugador, apilados a la izquierda de su campo de batalla (el rival arriba, tú abajo). Se abren solos en cuanto tienen cartas.
+- **Barra superior:** match y games, de quién es el turno, prioridad y cartas reveladas.
+- **Stops claros:** marcador azul encima de la fase para el turno del rival y dorado debajo para el tuyo.
 
 El layout solo cambia en pantallas de 768 px o más. En móvil se mantiene el diseño de Endstep con los colores de MTGO.
 
@@ -34,7 +36,9 @@ También funciona en Brave, Edge, Arc, Opera y otros navegadores basados en Chro
 - Se activa sola en endstep.cc.
 - Para encenderla o apagarla, pulsa el icono de la extensión y marca o desmarca **Enabled**.
 - **Log:** si lo cierras con la ✕ se queda cerrado. Se vuelve a abrir con el botón **Log** de abajo a la izquierda.
-- **Zonas:** pulsa la calavera (cementerio) o la llama (exilio) de un jugador.
+- **Zonas:** se abren solas cuando tienen cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las muestran u ocultan en la columna.
+- **Stops:** pulsa la mitad de arriba de una fase para el turno del rival y la de abajo para el tuyo.
+- **Redimensionar:** arrastra el borde izquierdo del log o el borde derecho de la columna de zonas. El contenido (cartas y texto) se agranda o encoge con el ancho, y el tamaño se recuerda. Doble clic en el borde para volver al tamaño por defecto.
 
 ## Privacidad y seguridad
 
@@ -45,13 +49,13 @@ Esta extensión **no recoge, guarda ni envía ningún dato**.
 | Webs en las que funciona | Solo `https://endstep.cc/*` |
 | Conexiones a internet | Ninguna: no hay analíticas, rastreo ni servidores |
 | Permisos | Solo `storage`, para recordar si está encendida o apagada |
-| Qué hace en la página | Cambia el CSS y pulsa dos botones de la propia Endstep: "Pop out" de las zonas y abrir el log |
+| Qué hace en la página | Cambia el CSS y pulsa botones de la propia Endstep: abrir el log, el cementerio y el exilio, y su "Pop out" |
 
 Todo el código está en este repositorio y es corto:
 
 - [`manifest.json`](manifest.json): permisos y en qué web corre
 - [`mtgo.css`](mtgo.css): el aspecto y el layout
-- [`content.js`](content.js): el interruptor, el log fijo y las zonas pegadas
+- [`content.js`](content.js): el interruptor, el log fijo, la barra superior y la columna de zonas
 - [`popup.html`](popup.html) / [`popup.js`](popup.js): la ventanita del icono
 
 Puedes comprobar que no hay ninguna petición de red buscando `fetch`, `XMLHttpRequest` o `http` en el código: las únicas URLs son `endstep.cc` (dónde se ejecuta) y `x.com/imcoesus` (el enlace del autor).

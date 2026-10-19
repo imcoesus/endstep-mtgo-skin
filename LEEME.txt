@@ -16,10 +16,12 @@ QUÉ HACE
     · barra de fases horizontal encima de la mano.
 - El log de la partida queda fijo a la derecha, de arriba a abajo, y se
   abre solo al empezar cada partida.
-- Cementerio, exilio y cartas reveladas se quedan abiertos y pegados al
-  campo de batalla: los tuyos a la derecha de tu campo, los del rival
-  arriba a la izquierda del suyo. Basta con pulsar la calavera o la llama
-  azul.
+- Columna de zonas a la izquierda de los campos de batalla, como en
+  MTGO: cementerio, exilio y cartas reveladas de cada jugador, apiladas
+  junto a su campo (el rival arriba, tú abajo). Se abren solas en cuanto
+  tienen cartas.
+- Barra superior con el match y los games, de quién es el turno, la
+  prioridad y las cartas reveladas.
 
 Solo cambia en pantallas de 768 px de ancho o más. En móvil se mantiene el
 diseño normal de Endstep (con los colores de MTGO).
@@ -49,8 +51,17 @@ CÓMO USARLA
   marca o desmarca "Enabled". El cambio es instantáneo.
 - Log: si lo cierras con la ✕ se queda cerrado. Para volver a abrirlo,
   usa el botón "Log" de abajo a la izquierda.
-- Zonas: pulsa la calavera (cementerio) o la llama (exilio) de cualquier
-  jugador y la ventana aparece pegada a su campo. Ciérrala con su ✕.
+- Zonas: se abren solas en la columna de la izquierda cuando tienen
+  cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las
+  muestran u ocultan. Si cierras una, no se vuelve a abrir sola en esa
+  partida.
+- Stops: en la barra de fases, la mitad de arriba de cada fase pone el
+  stop en el turno del rival (marcador azul encima) y la de abajo en tu
+  turno (marcador dorado debajo).
+- Redimensionar: arrastra el borde izquierdo del log o el borde derecho
+  de la columna de zonas. Las cartas y el texto se agrandan o encogen con
+  el ancho, y el tamaño se recuerda. Doble clic en el borde lo devuelve al
+  tamaño por defecto.
 
 
 ACTUALIZAR A UNA VERSIÓN NUEVA
@@ -71,8 +82,8 @@ Esta extensión NO recoge, guarda ni envía ningún dato. Es 100% segura:
 - El único permiso que pide es "storage", y solo lo usa para recordar si
   la tienes encendida o apagada.
 - Lo único que hace es cambiar el aspecto de la página (CSS) y pulsar por
-  ti dos botones de la propia Endstep: "Pop out" de las zonas y abrir el
-  log al empezar.
+  ti botones de la propia Endstep: abrir el log, el cementerio y el
+  exilio, y su "Pop out".
 - El código es corto y legible: puedes abrir content.js y mtgo.css con
   cualquier editor de texto y comprobarlo tú mismo.
 

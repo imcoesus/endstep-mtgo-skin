@@ -16,10 +16,11 @@ QUÉ HACE
     · barra de fases horizontal encima de la mano.
 - El log de la partida queda fijo a la derecha, de arriba a abajo, y se
   abre solo al empezar cada partida.
-- Columna de zonas a la izquierda de los campos de batalla, como en
-  MTGO: cementerio, exilio y cartas reveladas de cada jugador, apiladas
-  junto a su campo (el rival arriba, tú abajo). Se abren solas en cuanto
-  tienen cartas.
+- Cementerios como en MTGO: el de cada jugador aparece en la columna
+  izquierda, justo debajo de su panel.
+- Columna de zonas a la izquierda de los campos de batalla: exilio y
+  cartas reveladas de cada jugador, apiladas junto a su campo (el rival
+  arriba, tú abajo). Se abren solas en cuanto tienen cartas.
 - Barra superior con el match y los games, de quién es el turno, la
   prioridad y las cartas reveladas.
 
@@ -59,7 +60,8 @@ CÓMO USARLA
   stop en el turno del rival (marcador azul encima) y la de abajo en tu
   turno (marcador dorado debajo).
 - Redimensionar: arrastra el borde izquierdo del log, el borde derecho
-  de la columna de zonas o el borde de arriba de tu mano. Las cartas y el
+  de la columna de jugadores o de la de zonas, o el borde de arriba de tu
+  mano. Las cartas y el
   texto se agrandan o encogen con el tamaño, y se recuerda. Doble clic en el borde lo devuelve al
   tamaño por defecto.
 

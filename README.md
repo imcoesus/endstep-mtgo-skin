@@ -15,7 +15,8 @@ Made by [@imcoesus](https://x.com/imcoesus).
 - **Estilo MTGO:** gris carbón, campo de batalla gris pizarra, vidas grandes en blanco, botones con relieve.
 - **Layout MTGO:** columna izquierda con jugadores y prompt, campo del rival arriba y el tuyo abajo, barra de fases horizontal encima de la mano.
 - **Log fijo a la derecha**, de arriba a abajo. Se abre solo al empezar cada partida.
-- **Columna de zonas, como en MTGO:** cementerio, exilio y cartas reveladas de cada jugador, apilados a la izquierda de su campo de batalla (el rival arriba, tú abajo). Se abren solos en cuanto tienen cartas.
+- **Cementerios como en MTGO:** el cementerio de cada jugador aparece en la columna izquierda, justo debajo de su panel.
+- **Columna de zonas:** exilio y cartas reveladas de cada jugador, apilados a la izquierda de su campo de batalla (el rival arriba, tú abajo). Se abren solos en cuanto tienen cartas.
 - **Barra superior:** match y games, de quién es el turno, prioridad y cartas reveladas.
 - **Stops claros:** marcador azul encima de la fase para el turno del rival y dorado debajo para el tuyo.
 
@@ -38,7 +39,7 @@ También funciona en Brave, Edge, Arc, Opera y otros navegadores basados en Chro
 - **Log:** si lo cierras con la ✕ se queda cerrado. Se vuelve a abrir con el botón **Log** de abajo a la izquierda.
 - **Zonas:** se abren solas cuando tienen cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las muestran u ocultan en la columna.
 - **Stops:** pulsa la mitad de arriba de una fase para el turno del rival y la de abajo para el tuyo.
-- **Redimensionar:** arrastra el borde izquierdo del log, el borde derecho de la columna de zonas o el borde de arriba de tu mano. El contenido (cartas y texto) se agranda o encoge con el tamaño, y se recuerda. Doble clic en el borde para volver al tamaño por defecto.
+- **Redimensionar:** arrastra el borde izquierdo del log, el borde derecho de la columna de jugadores o de la de zonas, o el borde de arriba de tu mano. El contenido (cartas y texto) se agranda o encoge con el tamaño, y se recuerda. Doble clic en el borde para volver al tamaño por defecto.
 
 ## Privacidad y seguridad
 

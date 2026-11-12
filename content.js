@@ -137,24 +137,35 @@ function syncZoneDocks() {
     const side = mine ? 'me' : theirs ? 'opp' : me && head.includes(me) ? 'me' : 'opp';
     zones[side].push({ el, kind: zoneKind(head) });
   }
+  // Like MTGO, each graveyard sits in the left rail under its player's
+  // panel; exile, revealed and the rest stack in the zone column.
+  let inColumn = 0;
   for (const side of ['me', 'opp']) {
     zones[side].sort((a, b) => a.kind - b.kind);
-    zones[side].forEach(({ el, kind }, i) => {
+    const column = zones[side].filter(({ kind }) => ZONE_KINDS[kind][0] !== 'graveyard');
+    zones[side].forEach(({ el, kind }) => {
+      const name = ZONE_KINDS[kind][0];
       el.classList.add(ZONE_CLASS);
       el.classList.toggle(ZONE_CLASS + '--me', side === 'me');
       el.classList.toggle(ZONE_CLASS + '--opp', side === 'opp');
-      el.dataset.mtgoZone = ZONE_KINDS[kind][0];
-      el.style.setProperty('--mtgo-zone-slot', i);
-      el.style.setProperty('--mtgo-zone-count', zones[side].length);
+      el.classList.toggle(ZONE_CLASS + '--rail', name === 'graveyard');
+      el.dataset.mtgoZone = name;
     });
+    column.forEach(({ el }, i) => {
+      el.style.setProperty('--mtgo-zone-slot', i);
+      el.style.setProperty('--mtgo-zone-count', column.length);
+    });
+    inColumn += column.length;
+    root.classList.toggle(`mtgo-gy-${side}`, zones[side].some(({ kind }) => ZONE_KINDS[kind][0] === 'graveyard'));
   }
   // Drop the tag from windows that were closed or are no longer zones
   const kept = new Set([...zones.me, ...zones.opp].map((z) => z.el));
-  // No zone shown → mtgo.css collapses the zone column to nothing
-  root.classList.toggle('mtgo-has-zones', kept.size > 0);
+  sizeRailGraveyards();
+  // Nothing in the zone column → mtgo.css collapses it to nothing
+  root.classList.toggle('mtgo-has-zones', inColumn > 0);
   for (const el of document.querySelectorAll('.' + ZONE_CLASS)) {
     if (!kept.has(el)) {
-      el.classList.remove(ZONE_CLASS, ZONE_CLASS + '--me', ZONE_CLASS + '--opp');
+      el.classList.remove(ZONE_CLASS, ZONE_CLASS + '--me', ZONE_CLASS + '--opp', ZONE_CLASS + '--rail');
       delete el.dataset.mtgoZone;
     }
   }
@@ -219,11 +230,36 @@ async function autoOpenZones() {
   }
 }
 
+// Rail graveyards share whatever height the left rail has left after both
+// player panels, a minimum for the prompt + auto-pass block, and the Log
+// button, so the column fits the window instead of scrolling.
+const RAIL_PROMPT_MIN = 230;
+const RAIL_FOOTER = 44;
+function sizeRailGraveyards() {
+  const rail = document.querySelector('.wr-rail-left');
+  const shown = ['opp', 'me'].filter((side) => root.classList.contains(`mtgo-gy-${side}`)).length;
+  if (!rail || !shown) return;
+  const plates = [...rail.querySelectorAll(':scope > .wr-plate')].reduce((sum, p) => sum + p.offsetHeight, 0);
+  const free = rail.clientHeight - plates - RAIL_PROMPT_MIN - RAIL_FOOTER;
+  const h = Math.max(90, Math.min(320, Math.floor(free / shown)));
+  root.style.setProperty('--mtgo-gy-h', h + 'px');
+}
+
 // Docked windows are position:fixed, so they need the battlefield halves'
 // on-screen boxes. Publish them as CSS variables on <html>. Uses the part of
 // each half that is actually visible (clipped by its panel and kept below the
 // top bar), so a window can never start under the bar or off-screen.
 function publishHalfRects() {
+  const rail = document.querySelector('.wr-rail-left');
+  if (rail) {
+    sizeRailGraveyards();
+    const r = rail.getBoundingClientRect();
+    root.style.setProperty('--mtgo-rail-left', r.left + 'px');
+    for (const side of ['opp', 'me']) {
+      const plate = rail.querySelector(`.wr-plate[data-player-anchor="${side}"]`);
+      if (plate) root.style.setProperty(`--mtgo-plate-${side}-bottom`, plate.getBoundingClientRect().bottom + 'px');
+    }
+  }
   const hand = document.querySelector('.wr-main-col > .zone-hand');
   if (hand) {
     const h = hand.getBoundingClientRect();
@@ -386,6 +422,7 @@ window.addEventListener('resize', layoutBarRight);
 const PANES = {
   log:  { varName: '--mtgo-log-w',  scaleVar: '--mtgo-log-scale',  base: 300, min: 220, max: 640 },
   zone: { varName: '--mtgo-zone-w', scaleVar: '--mtgo-zone-scale', base: 200, min: 150, max: 440 },
+  rail: { varName: '--mtgo-rail-w', scaleVar: '--mtgo-rail-scale', base: 172, min: 150, max: 380 },
   // The hand is sized by height; its cards zoom with it
   hand: { varName: '--mtgo-hand-h', scaleVar: '--mtgo-hand-scale', base: 196, min: 120, max: 460 },
 };
@@ -440,6 +477,7 @@ function syncResizeHandles() {
   const inGame = root.classList.contains('mtgo-has-topbar');
   for (const [key, fromPointer] of [
     ['log', (e) => window.innerWidth - e.clientX],
+    ['rail', (e) => e.clientX - (document.querySelector('.wr-game-grid')?.getBoundingClientRect().left || 0)],
     ['zone', (e) => e.clientX - (document.querySelector('.wr-rail-left')?.getBoundingClientRect().right || 0)],
     ['hand', (e) => (document.querySelector('.wr-main-col > .zone-hand')?.getBoundingClientRect().bottom || window.innerHeight) - e.clientY],
   ]) {

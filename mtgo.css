@@ -518,7 +518,7 @@ html.mtgo-skin [data-testid="notice-chip-timer"] { background: #3f7fe0 !importan
     top: auto;
     bottom: 6px;
     left: 6px;
-    width: 160px;
+    width: calc(var(--mtgo-rail-w, 172px) - 12px);
     height: 28px;
     padding: 0;
     flex-direction: row;
@@ -555,7 +555,7 @@ html.mtgo-skin [data-testid="notice-chip-timer"] { background: #3f7fe0 !importan
     bottom: 6px !important;
     transform: none !important;
     translate: none !important; /* Tailwind v4 uses `translate`, not transform */
-    width: 160px;
+    width: calc(var(--mtgo-rail-w, 172px) - 12px);
   }
   html.mtgo-skin [data-testid="tablet-log-dock"] button {
     width: 100%;
@@ -1183,7 +1183,7 @@ html.mtgo-skin .wr-player-nameplate {
   html.mtgo-skin { --mtgo-zone-w: 200px; --mtgo-zone-gap: 6px; }
 
   html.mtgo-skin .wr-game-grid {
-    grid-template-columns: 172px var(--mtgo-zone-w) minmax(0, 1fr);
+    grid-template-columns: var(--mtgo-rail-w, 172px) var(--mtgo-zone-w) minmax(0, 1fr);
     grid-template-areas:
       "left zopp opp"
       "left zme  me"
@@ -1284,7 +1284,7 @@ html.mtgo-skin .wr-player-nameplate {
   html.mtgo-skin .mtgo-resize--zone {
     top: var(--mtgo-opp-top);
     height: calc(var(--mtgo-me-top) + var(--mtgo-me-height) - var(--mtgo-opp-top));
-    left: calc(172px + var(--mtgo-zone-w) - 4px);
+    left: calc(var(--mtgo-rail-w, 172px) + var(--mtgo-zone-w) - 4px);
   }
 
   /* Content scales with the pane (headers keep their size) */
@@ -1306,7 +1306,7 @@ html.mtgo-auto-zone [data-state="open"][class*="fixed"][class*="inset-0"] {
 /* Zone column collapses when no zone window is shown (content.js sets
    html.mtgo-has-zones while at least one is docked) */
 @media (min-width: 768px) {
-  html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid { grid-template-columns: 172px 0 minmax(0, 1fr); }
+  html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid { grid-template-columns: var(--mtgo-rail-w, 172px) 0 minmax(0, 1fr); }
   /* Keep the (now 0-wide) column's cells occupied so nothing lands there */
   html.mtgo-skin:not(.mtgo-has-zones) .wr-game-grid::before { border: 0; box-shadow: none; }
   html.mtgo-skin:not(.mtgo-has-zones) .mtgo-resize--zone { display: none; }
@@ -1366,4 +1366,43 @@ html.mtgo-skin.mtgo-has-topbar body {
   }
   html.mtgo-skin .mtgo-resize--hand:hover::before,
   html.mtgo-skin.mtgo-resizing .mtgo-resize--hand::before { background: var(--mtgo-gold); }
+}
+
+/* ---------- 21. Graveyards in the left rail, resizable rail -------------
+   As in MTGO, each player's graveyard pile sits in the left column right
+   under that player's panel. content.js tags those windows
+   .mtgo-zone-dock--rail, sets html.mtgo-gy-opp / .mtgo-gy-me while they are
+   shown, and publishes each panel's bottom edge. The panel reserves room
+   below itself with a margin and the window is pinned into it. The rail is
+   resizable (--mtgo-rail-w); the graveyard piles zoom with its width. */
+@media (min-width: 768px) {
+  html.mtgo-skin { --mtgo-gy-h: clamp(140px, 26vh, 340px); }
+
+  html.mtgo-skin.mtgo-gy-opp .wr-rail-left .wr-plate[data-player-anchor="opp"],
+  html.mtgo-skin.mtgo-gy-me .wr-rail-left .wr-plate[data-player-anchor="me"] {
+    margin-bottom: var(--mtgo-gy-h) !important;
+  }
+  /* Panels keep their full height and the prompt always keeps room to be
+     read (the rail scrolls before either is squeezed). Widening the rail
+     gives everything more width; only the graveyard piles zoom with it. */
+  html.mtgo-skin .wr-rail-left > .wr-plate { flex-shrink: 0 !important; }
+  html.mtgo-skin .wr-rail-left > [aria-label="Pending actions"] { min-height: 200px !important; flex-shrink: 0 !important; }
+
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail {
+    left: calc(var(--mtgo-rail-left) + 6px) !important;
+    right: auto !important;
+    width: calc(var(--mtgo-rail-w, 172px) - 12px) !important;
+    height: calc(var(--mtgo-gy-h) - 8px) !important;
+  }
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--opp { top: calc(var(--mtgo-plate-opp-bottom) + 4px) !important; }
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--me { top: calc(var(--mtgo-plate-me-bottom) + 4px) !important; }
+  html.mtgo-skin .mtgo-zone-dock--rail > :not(:first-child) { zoom: var(--mtgo-rail-scale, 1); }
+
+
+  /* Handle on the rail's right edge */
+  html.mtgo-skin .mtgo-resize--rail {
+    top: var(--mtgo-bar-h);
+    bottom: 0;
+    left: calc(var(--mtgo-rail-w, 172px) - 4px);
+  }
 }

@@ -18,6 +18,8 @@ Made by [@imcoesus](https://x.com/imcoesus).
 - **Cementerios como en MTGO:** el cementerio de cada jugador aparece en la columna izquierda, justo debajo de su panel.
 - **Columna de zonas:** exilio y cartas reveladas de cada jugador, apilados a la izquierda de su campo de batalla (el rival arriba, tú abajo). Se abren solos en cuanto tienen cartas.
 - **Barra superior:** match y games, de quién es el turno, prioridad y cartas reveladas.
+- **Ventanas que se arrastran:** cementerio, exilio y reveladas se pueden llevar a la columna de jugadores, a la de zonas o dejar flotando.
+- **El stack siempre encima** de todo lo demás.
 - **Stops claros:** marcador azul encima de la fase para el turno del rival y dorado debajo para el tuyo.
 
 El layout solo cambia en pantallas de 768 px o más. En móvil se mantiene el diseño de Endstep con los colores de MTGO.
@@ -37,7 +39,8 @@ También funciona en Brave, Edge, Arc, Opera y otros navegadores basados en Chro
 - Se activa sola en endstep.cc.
 - Para encenderla o apagarla, pulsa el icono de la extensión y marca o desmarca **Enabled**.
 - **Log:** si lo cierras con la ✕ se queda cerrado. Se vuelve a abrir con el botón **Log** de abajo a la izquierda.
-- **Zonas:** se abren solas cuando tienen cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las muestran u ocultan en la columna.
+- **Zonas:** se abren solas cuando tienen cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las muestran u ocultan.
+- **Mover zonas:** arrastra una ventana por su barra de título. Suéltala en la columna de jugadores (va bajo el panel de su dueño), en la columna de zonas, o en cualquier otro sitio para dejarla flotando. Se recuerda dónde la dejas.
 - **Stops:** pulsa la mitad de arriba de una fase para el turno del rival y la de abajo para el tuyo.
 - **Redimensionar:** arrastra el borde izquierdo del log, el borde derecho de la columna de jugadores o de la de zonas, o el borde de arriba de tu mano. El contenido (cartas y texto) se agranda o encoge con el tamaño, y se recuerda. Doble clic en el borde para volver al tamaño por defecto.
 
@@ -49,7 +52,7 @@ Esta extensión **no recoge, guarda ni envía ningún dato**.
 |---|---|
 | Webs en las que funciona | Solo `https://endstep.cc/*` |
 | Conexiones a internet | Ninguna: no hay analíticas, rastreo ni servidores |
-| Permisos | Solo `storage`, para recordar si está encendida o apagada |
+| Permisos | Solo `storage`, para recordar si está encendida, el tamaño de los paneles y dónde dejas cada ventana (solo en tu navegador) |
 | Qué hace en la página | Cambia el CSS y pulsa botones de la propia Endstep: abrir el log, el cementerio y el exilio, y su "Pop out" |
 
 Todo el código está en este repositorio y es corto:

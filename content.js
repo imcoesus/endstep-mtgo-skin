@@ -137,26 +137,38 @@ function syncZoneDocks() {
     const side = mine ? 'me' : theirs ? 'opp' : me && head.includes(me) ? 'me' : 'opp';
     zones[side].push({ el, kind: zoneKind(head) });
   }
-  // Like MTGO, each graveyard sits in the left rail under its player's
-  // panel; exile, revealed and the rest stack in the zone column.
+  // Each zone goes where the player last dragged it: the left rail (under
+  // its owner's panel), the zone column, or floating. By default, like
+  // MTGO, graveyards sit in the rail and the rest in the column.
   let inColumn = 0;
   for (const side of ['me', 'opp']) {
     zones[side].sort((a, b) => a.kind - b.kind);
-    const column = zones[side].filter(({ kind }) => ZONE_KINDS[kind][0] !== 'graveyard');
+    const lists = { rail: [], column: [], float: [] };
     zones[side].forEach(({ el, kind }) => {
       const name = ZONE_KINDS[kind][0];
+      const place = zonePlace(side, name);
+      const mode = typeof place === 'object' ? 'float' : place;
       el.classList.add(ZONE_CLASS);
       el.classList.toggle(ZONE_CLASS + '--me', side === 'me');
       el.classList.toggle(ZONE_CLASS + '--opp', side === 'opp');
-      el.classList.toggle(ZONE_CLASS + '--rail', name === 'graveyard');
+      el.classList.toggle(ZONE_CLASS + '--rail', mode === 'rail');
+      el.classList.toggle(ZONE_CLASS + '--float', mode === 'float');
       el.dataset.mtgoZone = name;
+      el.dataset.mtgoSide = side;
+      if (mode === 'float' && !el.classList.contains(ZONE_CLASS + '--dragging')) {
+        el.style.setProperty('--mtgo-float-x', place.x + 'px');
+        el.style.setProperty('--mtgo-float-y', place.y + 'px');
+      }
+      lists[mode].push(el);
     });
-    column.forEach(({ el }, i) => {
+    lists.column.forEach((el, i) => {
       el.style.setProperty('--mtgo-zone-slot', i);
-      el.style.setProperty('--mtgo-zone-count', column.length);
+      el.style.setProperty('--mtgo-zone-count', lists.column.length);
     });
-    inColumn += column.length;
-    root.classList.toggle(`mtgo-gy-${side}`, zones[side].some(({ kind }) => ZONE_KINDS[kind][0] === 'graveyard'));
+    lists.rail.forEach((el, i) => el.style.setProperty('--mtgo-rail-slot', i));
+    root.style.setProperty(`--mtgo-rail-n-${side}`, lists.rail.length);
+    inColumn += lists.column.length;
+    root.classList.toggle(`mtgo-gy-${side}`, lists.rail.length > 0);
   }
   // Drop the tag from windows that were closed or are no longer zones
   const kept = new Set([...zones.me, ...zones.opp].map((z) => z.el));
@@ -165,10 +177,147 @@ function syncZoneDocks() {
   root.classList.toggle('mtgo-has-zones', inColumn > 0);
   for (const el of document.querySelectorAll('.' + ZONE_CLASS)) {
     if (!kept.has(el)) {
-      el.classList.remove(ZONE_CLASS, ZONE_CLASS + '--me', ZONE_CLASS + '--opp', ZONE_CLASS + '--rail');
+      el.classList.remove(ZONE_CLASS, ZONE_CLASS + '--me', ZONE_CLASS + '--opp', ZONE_CLASS + '--rail', ZONE_CLASS + '--float');
       delete el.dataset.mtgoZone;
+      delete el.dataset.mtgoSide;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Dragging zone windows by their title bar. Dropped on the left rail they
+// snap under their owner's panel; on the zone column they snap into it;
+// anywhere else they float there (snapping to nearby edges). The place is
+// remembered per player side and zone kind.
+// ---------------------------------------------------------------------------
+const zonePlaces = {};
+chrome.storage.local.get({ zonePlaces: {} }, ({ zonePlaces: saved }) => {
+  Object.assign(zonePlaces, saved);
+  setTimeout(syncZoneDocks);
+});
+
+function zonePlace(side, kind) {
+  return zonePlaces[`${side}|${kind}`] || (kind === 'graveyard' ? 'rail' : 'column');
+}
+
+const SNAP = 14;
+let dropHint = null;
+
+// Which dock the pointer is over: the rail, the zone column (even while
+// it's collapsed, a band as wide as the default column), or nothing.
+function dropTarget(x, y) {
+  const rail = document.querySelector('.wr-rail-left')?.getBoundingClientRect();
+  const barBottom = document.getElementById(TOPBAR_ID)?.getBoundingClientRect().bottom || 0;
+  if (!rail || y < barBottom) return null;
+  if (x >= rail.left && x < rail.right) {
+    return { place: 'rail', rect: { left: rail.left, top: Math.max(rail.top, barBottom), width: rail.width, height: rail.bottom - Math.max(rail.top, barBottom) } };
+  }
+  const colW = root.classList.contains('mtgo-has-zones') ? paneWidths.zone : PANES.zone.base;
+  const hand = document.querySelector('.wr-main-col > .zone-hand')?.getBoundingClientRect();
+  const colBottom = hand ? hand.top : window.innerHeight;
+  if (x >= rail.right && x < rail.right + colW && y < colBottom) {
+    return { place: 'column', rect: { left: rail.right, top: barBottom, width: colW, height: colBottom - barBottom } };
+  }
+  return null;
+}
+
+function showDropHint(target) {
+  if (!target) { dropHint?.remove(); dropHint = null; return; }
+  if (!dropHint) {
+    dropHint = document.createElement('div');
+    dropHint.id = 'mtgo-drop-hint';
+    dropHint.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(dropHint);
+  }
+  const { left, top, width, height } = target.rect;
+  Object.assign(dropHint.style, { left: left + 'px', top: top + 'px', width: width + 'px', height: height + 'px' });
+}
+
+// Floating windows stick to the screen edges and to the log's edge when
+// dropped close to them, and never leave the screen.
+function snapFloat(x, y, w, h) {
+  const right = window.innerWidth - (root.classList.contains(OPEN_CLASS) ? (docked?.offsetWidth || 0) : 0);
+  const top = document.getElementById(TOPBAR_ID)?.getBoundingClientRect().bottom || 0;
+  const bottom = window.innerHeight;
+  x = Math.min(Math.max(x, 0), window.innerWidth - Math.min(w, 80));
+  y = Math.min(Math.max(y, top), bottom - 28);
+  if (Math.abs(x) < SNAP) x = 0;
+  if (Math.abs(x + w - right) < SNAP) x = right - w;
+  if (Math.abs(y - top) < SNAP) y = top;
+  if (Math.abs(y + h - bottom) < SNAP) y = bottom - h;
+  return { x: Math.round(x), y: Math.round(y) };
+}
+
+document.addEventListener('pointerdown', (e) => {
+  if (!root.classList.contains('mtgo-skin') || e.button !== 0 || window.innerWidth < 768) return;
+  const head = e.target.closest?.(`.${ZONE_CLASS} > :first-child`);
+  if (!head || e.target.closest('button, a, input, select, textarea')) return;
+  const win = head.parentElement;
+  const { mtgoSide: side, mtgoZone: kind } = win.dataset;
+  if (!side || !kind) return;
+  // Ours, not Endstep's drag (which would fight the docking)
+  e.preventDefault();
+  e.stopPropagation();
+  const start = win.getBoundingClientRect();
+  const dx = e.clientX - start.left;
+  const dy = e.clientY - start.top;
+  let moved = false;
+  let target = null;
+  const move = (ev) => {
+    if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 4) return;
+    if (!moved) {
+      moved = true;
+      root.classList.add('mtgo-zone-dragging');
+      win.classList.add(ZONE_CLASS + '--dragging');
+    }
+    win.style.setProperty('--mtgo-float-x', ev.clientX - dx + 'px');
+    win.style.setProperty('--mtgo-float-y', ev.clientY - dy + 'px');
+    target = dropTarget(ev.clientX, ev.clientY);
+    showDropHint(target);
+  };
+  const up = (ev) => {
+    window.removeEventListener('pointermove', move, true);
+    window.removeEventListener('pointerup', up, true);
+    window.removeEventListener('pointercancel', up, true);
+    showDropHint(null);
+    root.classList.remove('mtgo-zone-dragging');
+    win.classList.remove(ZONE_CLASS + '--dragging');
+    if (!moved) return;
+    const key = `${side}|${kind}`;
+    if (ev.type === 'pointercancel') {
+      syncZoneDocks();
+      return;
+    }
+    if (target) {
+      zonePlaces[key] = target.place;
+    } else {
+      const r = win.getBoundingClientRect();
+      zonePlaces[key] = snapFloat(ev.clientX - dx, ev.clientY - dy, r.width, r.height);
+    }
+    chrome.storage.local.set({ zonePlaces: { ...zonePlaces } });
+    syncZoneDocks();
+    publishHalfRects();
+  };
+  window.addEventListener('pointermove', move, true);
+  window.addEventListener('pointerup', up, true);
+  window.addEventListener('pointercancel', up, true);
+}, true);
+
+// ---------------------------------------------------------------------------
+// The stack window must always be on top. Endstep renders it as a floating
+// window holding [data-stack-item-id] entries; tag its fixed-position
+// ancestor so mtgo.css can lift it above the docked log, zones and bar.
+// ---------------------------------------------------------------------------
+function syncStackWindow() {
+  const wins = new Set();
+  for (const item of document.querySelectorAll('[data-stack-item-id]')) {
+    if (item.closest('.' + ZONE_CLASS + ', .' + DOCK_CLASS)) continue;
+    for (let el = item.parentElement; el && el !== document.body; el = el.parentElement) {
+      if (getComputedStyle(el).position === 'fixed') { wins.add(el); break; }
+    }
+  }
+  for (const el of document.querySelectorAll('.mtgo-stack-win')) if (!wins.has(el)) el.classList.remove('mtgo-stack-win');
+  for (const el of wins) el.classList.add('mtgo-stack-win');
 }
 
 // Open each player's graveyard and exile as soon as they have cards, so the
@@ -237,7 +386,8 @@ const RAIL_PROMPT_MIN = 230;
 const RAIL_FOOTER = 44;
 function sizeRailGraveyards() {
   const rail = document.querySelector('.wr-rail-left');
-  const shown = ['opp', 'me'].filter((side) => root.classList.contains(`mtgo-gy-${side}`)).length;
+  // Rail windows of both players share the free height evenly
+  const shown = ['opp', 'me'].reduce((n, side) => n + (Number(root.style.getPropertyValue(`--mtgo-rail-n-${side}`)) || 0), 0);
   if (!rail || !shown) return;
   const plates = [...rail.querySelectorAll(':scope > .wr-plate')].reduce((sum, p) => sum + p.offsetHeight, 0);
   const free = rail.clientHeight - plates - RAIL_PROMPT_MIN - RAIL_FOOTER;
@@ -502,6 +652,7 @@ new MutationObserver(() => {
     autoOpenZones();
     watchHalves();
     syncZoneDocks();
+    syncStackWindow();
     publishHalfRects();
     layoutBarRight();
   });

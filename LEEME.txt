@@ -21,6 +21,9 @@ QUÉ HACE
 - Columna de zonas a la izquierda de los campos de batalla: exilio y
   cartas reveladas de cada jugador, apiladas junto a su campo (el rival
   arriba, tú abajo). Se abren solas en cuanto tienen cartas.
+- Puedes arrastrar cada ventana de zona a la columna de jugadores, a la
+  de zonas o dejarla flotando donde quieras.
+- La ventana del stack siempre queda por encima de todo.
 - Barra superior con el match y los games, de quién es el turno, la
   prioridad y las cartas reveladas.
 
@@ -56,6 +59,10 @@ CÓMO USARLA
   cartas. La calavera (cementerio) y la llama (exilio) de cada jugador las
   muestran u ocultan. Si cierras una, no se vuelve a abrir sola en esa
   partida.
+- Mover zonas: arrastra una ventana por su barra de título. Suéltala en
+  la columna de jugadores (se pone bajo el panel de su dueño), en la
+  columna de zonas, o en cualquier otro sitio para dejarla flotando (se
+  pega a los bordes cercanos). Se recuerda dónde la dejas.
 - Stops: en la barra de fases, la mitad de arriba de cada fase pone el
   stop en el turno del rival (marcador azul encima) y la de abajo en tu
   turno (marcador dorado debajo).
@@ -82,7 +89,8 @@ Esta extensión NO recoge, guarda ni envía ningún dato. Es 100% segura:
   servidores propios.
 - No lee tus contraseñas, tu cuenta ni tus mazos.
 - El único permiso que pide es "storage", y solo lo usa para recordar si
-  la tienes encendida o apagada.
+  la tienes encendida o apagada, el tamaño de los paneles y dónde dejas
+  cada ventana. Se guarda solo en tu navegador.
 - Lo único que hace es cambiar el aspecto de la página (CSS) y pulsar por
   ti botones de la propia Endstep: abrir el log, el cementerio y el
   exilio, y su "Pop out".

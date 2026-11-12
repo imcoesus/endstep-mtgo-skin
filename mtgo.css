@@ -1378,9 +1378,11 @@ html.mtgo-skin.mtgo-has-topbar body {
 @media (min-width: 768px) {
   html.mtgo-skin { --mtgo-gy-h: clamp(140px, 26vh, 340px); }
 
-  html.mtgo-skin.mtgo-gy-opp .wr-rail-left .wr-plate[data-player-anchor="opp"],
+  html.mtgo-skin.mtgo-gy-opp .wr-rail-left .wr-plate[data-player-anchor="opp"] {
+    margin-bottom: calc(var(--mtgo-rail-n-opp, 1) * var(--mtgo-gy-h)) !important;
+  }
   html.mtgo-skin.mtgo-gy-me .wr-rail-left .wr-plate[data-player-anchor="me"] {
-    margin-bottom: var(--mtgo-gy-h) !important;
+    margin-bottom: calc(var(--mtgo-rail-n-me, 1) * var(--mtgo-gy-h)) !important;
   }
   /* Panels keep their full height and the prompt always keeps room to be
      read (the rail scrolls before either is squeezed). Widening the rail
@@ -1394,9 +1396,15 @@ html.mtgo-skin.mtgo-has-topbar body {
     width: calc(var(--mtgo-rail-w, 172px) - 12px) !important;
     height: calc(var(--mtgo-gy-h) - 8px) !important;
   }
-  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--opp { top: calc(var(--mtgo-plate-opp-bottom) + 4px) !important; }
-  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--me { top: calc(var(--mtgo-plate-me-bottom) + 4px) !important; }
-  html.mtgo-skin .mtgo-zone-dock--rail > :not(:first-child) { zoom: var(--mtgo-rail-scale, 1); }
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--opp {
+    top: calc(var(--mtgo-plate-opp-bottom) + 4px + var(--mtgo-rail-slot, 0) * var(--mtgo-gy-h)) !important;
+  }
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock--rail.mtgo-zone-dock--me {
+    top: calc(var(--mtgo-plate-me-bottom) + 4px + var(--mtgo-rail-slot, 0) * var(--mtgo-gy-h)) !important;
+  }
+  /* The rail is narrow: show the piles at a smaller card size (they still
+     grow with the rail's width) */
+  html.mtgo-skin .mtgo-zone-dock--rail > :not(:first-child) { zoom: calc(.62 * var(--mtgo-rail-scale, 1)); }
 
 
   /* Handle on the rail's right edge */
@@ -1405,4 +1413,47 @@ html.mtgo-skin.mtgo-has-topbar body {
     bottom: 0;
     left: calc(var(--mtgo-rail-w, 172px) - 4px);
   }
+}
+
+/* ---------- 22. Draggable zone windows, stack on top --------------------
+   Zone windows are dragged by their title bar (content.js). While dragging
+   and when dropped away from the rail and the zone column they float at
+   --mtgo-float-x / --mtgo-float-y. The rail or column under the pointer is
+   outlined as the drop target. The stack window always stays above
+   everything the skin docks. */
+@media (min-width: 768px) {
+  html.mtgo-skin .mtgo-zone-dock > :first-child { cursor: grab; user-select: none; }
+  html.mtgo-skin.mtgo-zone-dragging,
+  html.mtgo-skin.mtgo-zone-dragging * { cursor: grabbing !important; user-select: none !important; }
+
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock--float,
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock--dragging {
+    left: var(--mtgo-float-x) !important;
+    top: var(--mtgo-float-y) !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: calc(var(--mtgo-zone-w) - 2 * var(--mtgo-zone-gap)) !important;
+    height: min(300px, 45vh) !important;
+    z-index: 44 !important;
+    box-shadow: inset 0 1px 0 #444, 0 6px 18px #000c !important;
+  }
+  html.mtgo-skin .mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock.mtgo-zone-dock--dragging {
+    z-index: 49 !important;
+    opacity: .9;
+    pointer-events: none;
+  }
+  html.mtgo-skin .mtgo-zone-dock--float > :not(:first-child),
+  html.mtgo-skin .mtgo-zone-dock--dragging > :not(:first-child) { zoom: var(--mtgo-zone-scale, 1); }
+
+  #mtgo-drop-hint {
+    position: fixed;
+    z-index: 48;
+    pointer-events: none;
+    border: 2px solid var(--mtgo-gold);
+    background: color-mix(in srgb, var(--mtgo-gold) 14%, transparent);
+    box-shadow: inset 0 0 12px #0008;
+  }
+
+  html.mtgo-skin .mtgo-stack-win,
+  html.mtgo-skin .wr-stack-pop-out { z-index: 49 !important; }
 }

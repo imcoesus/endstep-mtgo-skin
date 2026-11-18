@@ -1332,7 +1332,9 @@ html.mtgo-skin.mtgo-has-topbar body {
     padding-bottom: 6px !important;
     box-sizing: border-box;
   }
-  html.mtgo-skin .wr-main-col > .zone-hand [data-testid="hand-cards"] {
+  /* Whatever Endstep wraps the cards in, zoom it (content.js fits the
+     scale so the cards fill the hand's height) */
+  html.mtgo-skin .wr-main-col > .zone-hand > * {
     zoom: var(--mtgo-hand-scale, 1);
   }
 

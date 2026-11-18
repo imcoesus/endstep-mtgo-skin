@@ -395,6 +395,22 @@ function sizeRailGraveyards() {
   root.style.setProperty('--mtgo-gy-h', h + 'px');
 }
 
+// The hand's cards zoom so they fill its height exactly. Endstep sizes the
+// cards itself (it varies with the screen and its own settings) and writes
+// that size inline on each card image, so read it there instead of assuming
+// one: a hand shorter than Endstep's cards would otherwise cut them off.
+const HAND_CHROME = 18;   // the hand's padding plus the strip's bottom gap
+function fitHand(hand) {
+  const handH = paneWidths.hand || PANES.hand.base;
+  let cardH = 0;
+  for (const img of hand.querySelectorAll('img[style*="height"]')) {
+    const h = parseFloat(img.style.height);
+    if (img.style.height.endsWith('px') && h > cardH) cardH = h;
+  }
+  const scale = cardH > 40 ? (handH - HAND_CHROME) / cardH : handH / PANES.hand.base;
+  root.style.setProperty('--mtgo-hand-scale', Math.min(3, Math.max(.3, scale)).toFixed(3));
+}
+
 // Docked windows are position:fixed, so they need the battlefield halves'
 // on-screen boxes. Publish them as CSS variables on <html>. Uses the part of
 // each half that is actually visible (clipped by its panel and kept below the
@@ -412,6 +428,7 @@ function publishHalfRects() {
   }
   const hand = document.querySelector('.wr-main-col > .zone-hand');
   if (hand) {
+    fitHand(hand);
     const h = hand.getBoundingClientRect();
     root.style.setProperty('--mtgo-hand-top', h.top + 'px');
     root.style.setProperty('--mtgo-hand-left', h.left + 'px');

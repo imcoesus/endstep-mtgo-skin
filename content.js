@@ -494,12 +494,54 @@ document.addEventListener('click', (e) => {
 // page with it. Cancel only the browser's default action, on window in the
 // bubble phase — after Endstep has handled the key — and never while typing
 // or on a focused button (where Space means "press").
+const TYPING = 'input, textarea, select, button, [contenteditable=""], [contenteditable="true"]';
 window.addEventListener('keydown', (e) => {
   if (e.code !== 'Space' || !root.classList.contains('mtgo-has-topbar')) return;
-  const t = e.target;
-  if (t.closest?.('input, textarea, select, button, [contenteditable=""], [contenteditable="true"]')) return;
+  if (e.target.closest?.(TYPING)) return;
   e.preventDefault();
 });
+
+// That isn't always enough: when Endstep stops the key from propagating, the
+// listener above never runs, and the browser still scrolls whatever panel
+// was last clicked (a battlefield, the left column, a zone window). Cancelling
+// the key earlier could stop Endstep from passing priority, so instead note
+// where every scrollable panel was when Space went down and put back any that
+// move in the next moment. The log is left alone: it scrolls itself to each
+// new line, and passing priority adds lines.
+let lastPointerTarget = null;
+document.addEventListener('pointerdown', (e) => { lastPointerTarget = e.target; }, true);
+
+let spaceScroll = null;   // { until, positions: Map<element, scrollTop> }
+function scrollablesFrom(el, into) {
+  for (; el && el !== document.documentElement; el = el.parentElement) {
+    if (el.closest?.('.' + DOCK_CLASS)) return;
+    if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
+      into.set(el, [el.scrollTop, el.scrollLeft]);
+    }
+  }
+}
+window.addEventListener('keydown', (e) => {
+  if (e.code !== 'Space' || !root.classList.contains('mtgo-has-topbar')) return;
+  if (e.target.closest?.(TYPING)) return;
+  const positions = spaceScroll && performance.now() < spaceScroll.until ? spaceScroll.positions : new Map();
+  scrollablesFrom(document.activeElement, positions);
+  scrollablesFrom(lastPointerTarget, positions);
+  const page = document.scrollingElement;
+  if (page) positions.set(page, [page.scrollTop, page.scrollLeft]);
+  spaceScroll = { until: performance.now() + 600, positions };
+}, true);
+// The player scrolling on purpose wins
+for (const type of ['wheel', 'touchmove']) {
+  window.addEventListener(type, () => { spaceScroll = null; }, { capture: true, passive: true });
+}
+document.addEventListener('scroll', (e) => {
+  if (!spaceScroll || performance.now() > spaceScroll.until) return;
+  const el = e.target === document ? document.scrollingElement : e.target;
+  const pos = spaceScroll.positions.get(el);
+  if (!pos) return;
+  if (el.scrollTop !== pos[0]) el.scrollTop = pos[0];
+  if (el.scrollLeft !== pos[1]) el.scrollLeft = pos[1];
+}, true);
 
 // ---------------------------------------------------------------------------
 // Match bar: a strip across the top of the game, like MTGO's window title
